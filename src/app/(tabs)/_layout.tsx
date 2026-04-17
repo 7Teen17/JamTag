@@ -19,6 +19,7 @@ export default function TabLayout() {
         tabBarButton: HapticTab,
         tabBarLabelStyle: {
           fontSize: 14,
+          fontFamily: "UrbanistRegular",
         },
       }}
     >
