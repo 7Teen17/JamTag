@@ -1,28 +1,20 @@
-import { Image, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
 export default function RecentlyTaggedItem() {
   return (
-    <View style={{ width: 125, padding: 5 }}>
-      <View style={{ borderRadius: 15, overflow: "hidden" }}>
+    <View style={styles.container}>
+      <View style={styles.imageContainer}>
         <Image
           source={require("@/assets/images/testimage.png")}
-          style={{ width: "100%", height: undefined, aspectRatio: 1 }}
+          style={styles.image}
         ></Image>
       </View>
-      <View style={{ paddingLeft: 5 }}>
-        <ThemedText style={{ paddingTop: 5 }}>Blinding Lights</ThemedText>
+      <View style={styles.textContainer}>
+        <ThemedText style={styles.title}>Blinding Lights</ThemedText>
         <ThemedText type="smallText">The Weeknd</ThemedText>
-        <View
-          style={{
-            display: "flex",
-            flexDirection: "row",
-            gap: 4,
-            alignItems: "center",
-            paddingTop: 3,
-          }}
-        >
+        <View style={styles.tagRow}>
           <Tag></Tag>
           <Tag></Tag>
           <ThemedText type="smallText">+17</ThemedText>
@@ -31,3 +23,32 @@ export default function RecentlyTaggedItem() {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    width: 125,
+    padding: 5,
+  },
+  imageContainer: {
+    borderRadius: 15,
+    overflow: "hidden",
+  },
+  image: {
+    width: "100%",
+    height: undefined,
+    aspectRatio: 1,
+  },
+  textContainer: {
+    paddingLeft: 5,
+  },
+  title: {
+    paddingTop: 5,
+  },
+  tagRow: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 4,
+    alignItems: "center",
+    paddingTop: 3,
+  },
+});
