@@ -13,7 +13,7 @@ export default function Tag() {
     >
       <ThemedText
         type="tag"
-        style={{ paddingHorizontal: 10, paddingVertical: 2 }}
+        style={{ paddingHorizontal: 5, paddingVertical: 2 }}
       >
         Cool
       </ThemedText>
