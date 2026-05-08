@@ -1,35 +1,27 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
-import { Link } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function SearchScreen() {
   return (
     <>
-      <ThemedText style={styles.sectionTitle}>
-        Recently Tagged
-      </ThemedText>
-      <View style={styles.recentItems}>
+      <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.recentItemsScroller}
+        contentContainerStyle={styles.recentItems}
+      >
         <RecentlyTaggedItem></RecentlyTaggedItem>
         <RecentlyTaggedItem></RecentlyTaggedItem>
         <RecentlyTaggedItem></RecentlyTaggedItem>
         <RecentlyTaggedItem></RecentlyTaggedItem>
-      </View>
+      </ScrollView>
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
       </View>
-      <ThemedText style={styles.sectionTitle}>
-        Recently Tagged
-      </ThemedText>
-      <View style={styles.recentItems}>
-        <Link href="/login">
-          <RecentlyTaggedItem></RecentlyTaggedItem>
-        </Link>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-      </View>
+      <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
     </>
   );
 }
@@ -45,6 +37,12 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     paddingLeft: 5,
+    paddingRight: 10,
+  },
+  recentItemsScroller: {
+    width: "100%",
+    flexGrow: 0,
+    flexShrink: 0,
   },
   nowPlayingContainer: {
     padding: 10,
