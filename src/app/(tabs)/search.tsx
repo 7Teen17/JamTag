@@ -21,7 +21,6 @@ export default function SearchScreen() {
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
       </View>
-      <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
     </>
   );
 }
@@ -48,5 +47,8 @@ const styles = StyleSheet.create({
     padding: 10,
     position: "absolute",
     bottom: 0,
+    width: "100%",
+    zIndex: 10,
+    elevation: 10,
   },
 });
