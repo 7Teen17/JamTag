@@ -1,107 +1,61 @@
-import { Image } from "expo-image";
-import { Platform, StyleSheet } from "react-native";
-
-import { HelloWave } from "@/src/components/default/hello-wave";
-import ParallaxScrollView from "@/src/components/default/parallax-scroll-view";
 import { ThemedText } from "@/src/components/default/themed-text";
-import { ThemedView } from "@/src/components/default/themed-view";
-import { Link } from "expo-router";
+import NowPlayingCard from "@/src/components/nowPlayingCard";
+import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
+import { ScrollView, StyleSheet, View } from "react-native";
 
-export default function HomeScreen() {
+export default function SearchScreen() {
+  const test_songs = [
+    ["Blinding Lights", "The Weeknd"],
+    ["All You Had To Do Was Stay", "Taylor Swift"],
+    ["marjorie", "Taylor Swift"],
+    ["Livin' On a Prayer", "Bon Jovi"],
+  ];
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: "#A1CEDC", dark: "#1D3D47" }}
-      headerImage={
-        <Image
-          source={require("@/assets/images/partial-react-logo.png")}
-          style={styles.reactLogo}
-        />
-      }
-    >
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit{" "}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText>{" "}
-          to see changes. Press{" "}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: "cmd + d",
-              android: "cmd + m",
-              web: "F12",
-            })}
-          </ThemedText>{" "}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction
-              title="Action"
-              icon="cube"
-              onPress={() => alert("Action pressed")}
-            />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert("Share pressed")}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert("Delete pressed")}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
-
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">
-            npm run reset-project
-          </ThemedText>{" "}
-          to get a fresh <ThemedText type="defaultSemiBold">app</ThemedText>{" "}
-          directory. This will move the current{" "}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{" "}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+    <>
+      <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.recentItemsScroller}
+        contentContainerStyle={styles.recentItems}
+      >
+        <RecentlyTaggedItem></RecentlyTaggedItem>
+        <RecentlyTaggedItem></RecentlyTaggedItem>
+        <RecentlyTaggedItem></RecentlyTaggedItem>
+        <RecentlyTaggedItem></RecentlyTaggedItem>
+      </ScrollView>
+      <View style={styles.nowPlayingContainer}>
+        <NowPlayingCard></NowPlayingCard>
+      </View>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  sectionTitle: {
+    fontSize: 25,
+    fontFamily: "UrbanistBold",
+    padding: 10,
+    paddingTop: 20,
+  },
+  recentItems: {
+    display: "flex",
     flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
+    paddingLeft: 5,
+    paddingRight: 10,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  recentItemsScroller: {
+    width: "100%",
+    flexGrow: 0,
+    flexShrink: 0,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  nowPlayingContainer: {
+    padding: 10,
     position: "absolute",
+    bottom: 0,
+    width: "100%",
+    zIndex: 10,
+    elevation: 10,
   },
 });
