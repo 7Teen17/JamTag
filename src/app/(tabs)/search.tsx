@@ -4,6 +4,13 @@ import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function SearchScreen() {
+  const test_songs = [
+    ["Blinding Lights", "The Weeknd"],
+    ["All You Had To Do Was Stay", "Taylor Swift"],
+    ["marjorie", "Taylor Swift"],
+    ["Livin' On a Prayer", "Bon Jovi"],
+  ];
+
   return (
     <>
       <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
