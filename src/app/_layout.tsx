@@ -42,7 +42,7 @@ export default function RootLayout() {
           name="(tabs)"
           options={{
             headerShown: true,
-            title: "TagLab",
+            title: "JamTag",
             headerTitleStyle: { fontFamily: "UrbanistBold" },
           }}
         />

@@ -32,7 +32,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <ThemedText type="title" style={styles.title}>
-        TagLab
+        JamTag
       </ThemedText>
       <View style={styles.content}>
         <ThemedText style={styles.subtitle}>

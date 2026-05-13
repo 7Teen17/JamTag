@@ -46,7 +46,7 @@ export function useSpotifyAuth() {
   const redirectUri = useMemo(
     () =>
       makeRedirectUri({
-        scheme: "taglab",
+        scheme: "jamtag",
         path: "spotify-auth",
       }),
     [],

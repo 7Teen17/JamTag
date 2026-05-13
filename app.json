@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "TagLab",
-    "slug": "TagLab",
+    "name": "JamTag",
+    "slug": "JamTag",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "taglab",
+    "scheme": "jamtag",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.7teen.TagLab",
+      "bundleIdentifier": "com.7teen.JamTag",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
