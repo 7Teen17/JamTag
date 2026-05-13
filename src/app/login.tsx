@@ -1,8 +1,8 @@
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { Alert, StyleSheet, TouchableHighlight, View } from "react-native";
-import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { ThemedText } from "../components/default/themed-text";
+import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,9 +18,15 @@ export default function LoginScreen() {
     } catch (error) {
       Alert.alert(
         "Spotify Login Failed",
-        error instanceof Error ? error.message : "Unable to sign in with Spotify."
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in with Spotify.",
       );
     }
+  };
+
+  const handleApplePress = async () => {
+    Alert.alert("Apple Login Failed", "Apple Music not implemented yet.");
   };
 
   return (
@@ -47,7 +53,11 @@ export default function LoginScreen() {
           </View>
         </TouchableHighlight>
 
-        <TouchableHighlight style={styles.appleButton} underlayColor="#FFFFFF">
+        <TouchableHighlight
+          style={styles.appleButton && styles.disabledButton}
+          underlayColor="#FFFFFF"
+          onPress={handleApplePress}
+        >
           <View style={styles.buttonContent}>
             <Image
               source={require("@/assets/images/newapplemusic.png")}
