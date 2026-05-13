@@ -3,7 +3,7 @@ import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-export default function SearchScreen() {
+export default function HomeScreen() {
   const test_songs = [
     ["Blinding Lights", "The Weeknd"],
     ["All You Had To Do Was Stay", "Taylor Swift"],
