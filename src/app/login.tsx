@@ -1,8 +1,28 @@
 import { Image } from "expo-image";
-import { StyleSheet, TouchableHighlight, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Alert, StyleSheet, TouchableHighlight, View } from "react-native";
+import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { ThemedText } from "../components/default/themed-text";
 
 export default function LoginScreen() {
+  const router = useRouter();
+  const { isLoading, signIn } = useSpotifyAuth();
+
+  const handleSpotifyPress = async () => {
+    try {
+      const response = await signIn();
+
+      if (response) {
+        router.replace("/");
+      }
+    } catch (error) {
+      Alert.alert(
+        "Spotify Login Failed",
+        error instanceof Error ? error.message : "Unable to sign in with Spotify."
+      );
+    }
+  };
+
   return (
     <View style={styles.container}>
       <ThemedText type="title" style={styles.title}>
@@ -13,7 +33,9 @@ export default function LoginScreen() {
           Connect a music service to start tagging
         </ThemedText>
         <TouchableHighlight
-          style={styles.spotifyButton}
+          disabled={isLoading}
+          onPress={handleSpotifyPress}
+          style={[styles.spotifyButton, isLoading && styles.disabledButton]}
           underlayColor="#1db954"
         >
           <View style={styles.buttonContent}>
@@ -73,6 +95,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginTop: 18,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
   buttonContent: {
     flexDirection: "row",
