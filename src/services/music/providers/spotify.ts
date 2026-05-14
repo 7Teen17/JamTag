@@ -12,7 +12,11 @@ export const SPOTIFY_SCOPES = [
   "user-read-private",
   "user-read-currently-playing",
   "user-read-playback-state",
+  "playlist-read-private",
+  "playlist-modify-private",
 ];
+
+export const SPOTIFY_TOKEN_KEY = "spotify_token_response";
 
 export class SpotifyMusicService extends MusicService {
   readonly id = "spotify";

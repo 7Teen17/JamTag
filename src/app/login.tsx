@@ -6,9 +6,13 @@ import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { isLoading, signIn } = useSpotifyAuth();
+  const { isLoading, signIn, isReady, isAuthenticated, musicService } =
+    useSpotifyAuth();
 
   const handleSpotifyPress = async () => {
+    if (isAuthenticated) {
+      return;
+    }
     try {
       const response = await signIn();
 
@@ -39,9 +43,12 @@ export default function LoginScreen() {
           Connect a music service to start tagging
         </ThemedText>
         <TouchableHighlight
-          disabled={isLoading}
+          disabled={isLoading || !isReady}
           onPress={handleSpotifyPress}
-          style={[styles.spotifyButton, isLoading && styles.disabledButton]}
+          style={[
+            styles.spotifyButton,
+            (isLoading || isAuthenticated) && styles.disabledButton,
+          ]}
           underlayColor="#1db954"
         >
           <View style={styles.buttonContent}>
@@ -66,6 +73,10 @@ export default function LoginScreen() {
             />
           </View>
         </TouchableHighlight>
+        {isAuthenticated && (
+          <ThemedText>{musicService.displayName} connected</ThemedText>
+        )}
+        {!isAuthenticated && <ThemedText>didnt work</ThemedText>}
       </View>
     </View>
   );

@@ -7,6 +7,7 @@ import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import "react-native-reanimated";
 
+import { SpotifyAuthProvider } from "@/src/hooks/auth/SpotifyAuthProvider";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -36,23 +37,25 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: true,
-            title: "JamTag",
-            headerTitleStyle: { fontFamily: "UrbanistBold" },
-          }}
-        />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-        <Stack.Screen name="login" options={{ headerShown: false }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <SpotifyAuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack>
+          <Stack.Screen
+            name="(tabs)"
+            options={{
+              headerShown: true,
+              title: "JamTag",
+              headerTitleStyle: { fontFamily: "UrbanistBold" },
+            }}
+          />
+          <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          />
+          <Stack.Screen name="login" options={{ headerShown: false }} />
+        </Stack>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </SpotifyAuthProvider>
   );
 }
