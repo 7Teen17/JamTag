@@ -1,6 +1,6 @@
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
-import type { MusicAuthSession, MusicTrack, PlaybackState } from "../types";
+import type { MusicTrack, PlaybackState } from "../types";
 
 export const SPOTIFY_DISCOVERY: DiscoveryDocument = {
   authorizationEndpoint: "https://accounts.spotify.com/authorize",
@@ -22,56 +22,41 @@ export class SpotifyMusicService extends MusicService {
   readonly id = "spotify";
   readonly displayName = "Spotify";
 
-  async connect(): Promise<MusicAuthSession> {
-    if (!this.authSession) {
-      throw new Error("Spotify auth has not been completed yet.");
-    }
-
-    return this.authSession;
-  }
-
-  async disconnect(): Promise<void> {
-    this.authSession = null;
-  }
-
   async getCurrentPlayback(): Promise<PlaybackState | null> {
-    if (this.connected()) {
-      let response = await fetch(
-        "https://api.spotify.com/v1/me/player/currently-playing",
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${this.authSession?.accessToken}` },
-        },
-      );
+    const response = await fetch(
+      "https://api.spotify.com/v1/me/player/currently-playing",
+      {
+        method: "GET",
+        headers: this.getAuthorizationHeaders(),
+      },
+    );
 
-      if (!response.ok || response.status === 204) {
-        return null;
-      }
-      const result = await response.json();
-
-      if (result.currently_playing_type !== "track" || !result.item) {
-        return null;
-      }
-
-      let track: MusicTrack = {
-        provider: "spotify",
-        providerTrackId: result.item.id,
-        title: result.item.name,
-        artists: result.item.artists.map((artist: any) => artist.name),
-        album: result.item.album.name,
-        artworkUrl: result.item.album.images?.[0]?.url,
-        durationMs: result.item.duration_ms,
-        isrc: result.item.external_ids?.isrc,
-      };
-
-      return {
-        track: track,
-        isPlaying: result.is_playing,
-        progressMs: result.progress_ms,
-      };
+    if (!response.ok || response.status === 204) {
+      return null;
     }
 
-    return null;
+    const result = await response.json();
+
+    if (result.currently_playing_type !== "track" || !result.item) {
+      return null;
+    }
+
+    const track: MusicTrack = {
+      provider: "spotify",
+      providerTrackId: result.item.id,
+      title: result.item.name,
+      artists: result.item.artists.map((artist: any) => artist.name),
+      album: result.item.album.name,
+      artworkUrl: result.item.album.images?.[0]?.url,
+      durationMs: result.item.duration_ms,
+      isrc: result.item.external_ids?.isrc,
+    };
+
+    return {
+      track,
+      isPlaying: result.is_playing,
+      progressMs: result.progress_ms,
+    };
   }
 
   async searchTracks(_query: string): Promise<MusicTrack[]> {
@@ -88,7 +73,7 @@ export class SpotifyMusicService extends MusicService {
     }
 
     return {
-      Authorization: `Bearer ${this.authSession?.accessToken}`,
+      Authorization: `Bearer ${this.authSession.accessToken}`,
     };
   }
 }

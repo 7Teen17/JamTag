@@ -9,22 +9,20 @@ export abstract class MusicService {
   abstract readonly id: MusicProviderId;
   abstract readonly displayName: string;
 
-  protected authSession: MusicAuthSession | null = null;
+  protected authSession: MusicAuthSession;
 
-  constructor(authSession?: MusicAuthSession | null) {
-    this.authSession = authSession ?? null;
+  constructor(authSession: MusicAuthSession) {
+    this.authSession = authSession;
   }
 
-  setAuthSession(authSession: MusicAuthSession | null) {
+  setAuthSession(authSession: MusicAuthSession) {
     this.authSession = authSession;
   }
 
   connected(): boolean {
-    return this.authSession?.accessToken ? true : false;
+    return Boolean(this.authSession.accessToken);
   }
 
-  abstract connect(): Promise<MusicAuthSession>;
-  abstract disconnect(): Promise<void>;
   abstract getCurrentPlayback(): Promise<PlaybackState | null>;
   abstract searchTracks(query: string): Promise<MusicTrack[]>;
   abstract getTrack(id: string): Promise<MusicTrack>;

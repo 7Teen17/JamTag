@@ -5,19 +5,29 @@ import type { SpotifyMusicService } from "@/src/services/music/providers/spotify
 import type { MusicAuthSession } from "@/src/services/music/types";
 
 export type SpotifyAuthContextValue = {
-  accessToken: string | null;
-  authSession: MusicAuthSession | null;
-  isAuthenticated: boolean;
   isLoading: boolean;
   isRestoringAuth: boolean;
   isReady: boolean;
-  musicService: SpotifyMusicService;
   redirectUri: string;
   refresh: () => Promise<TokenResponse | null>;
   signIn: () => Promise<TokenResponse | null>;
   signOut: () => Promise<void>;
-  tokenResponse: TokenResponse | null;
-};
+} & (
+  | {
+      accessToken: string;
+      authSession: MusicAuthSession;
+      isAuthenticated: true;
+      musicService: SpotifyMusicService;
+      tokenResponse: TokenResponse;
+    }
+  | {
+      accessToken: null;
+      authSession: null;
+      isAuthenticated: false;
+      musicService: null;
+      tokenResponse: null;
+    }
+);
 
 export const SpotifyAuthContext =
   createContext<SpotifyAuthContextValue | null>(null);

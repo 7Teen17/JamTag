@@ -10,7 +10,13 @@ import {
 } from "expo-auth-session";
 import * as SecureStore from "expo-secure-store";
 import * as WebBrowser from "expo-web-browser";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
 import {
   SPOTIFY_DISCOVERY,
@@ -19,11 +25,15 @@ import {
   SpotifyMusicService,
 } from "@/src/services/music/providers/spotify";
 import type { MusicAuthSession } from "@/src/services/music/types";
-import { SpotifyAuthContext } from "./useSpotifyAuth";
+import {
+  SpotifyAuthContext,
+  type SpotifyAuthContextValue,
+} from "./useSpotifyAuth";
 
 WebBrowser.maybeCompleteAuthSession();
 
 const spotifyClientId = process.env.EXPO_PUBLIC_SPOTIFY_CLIENT_ID;
+const TOKEN_REFRESH_CHECK_INTERVAL_MS = 30_000;
 
 function toMusicAuthSession(tokenResponse: TokenResponse): MusicAuthSession {
   return {
@@ -43,6 +53,10 @@ async function saveToken(response: TokenResponse) {
   );
 }
 
+async function deleteToken() {
+  await SecureStore.deleteItemAsync(SPOTIFY_TOKEN_KEY);
+}
+
 async function loadToken() {
   const raw = await SecureStore.getItemAsync(SPOTIFY_TOKEN_KEY);
 
@@ -54,19 +68,62 @@ async function loadToken() {
     const storedToken = JSON.parse(raw) as Partial<TokenResponseConfig>;
 
     if (typeof storedToken.accessToken !== "string") {
-      await SecureStore.deleteItemAsync(SPOTIFY_TOKEN_KEY);
+      await deleteToken();
       return null;
     }
 
     return new TokenResponse(storedToken as TokenResponseConfig);
   } catch {
-    await SecureStore.deleteItemAsync(SPOTIFY_TOKEN_KEY);
+    await deleteToken();
     return null;
   }
 }
 
+async function refreshTokenResponse(tokenResponse: TokenResponse) {
+  if (!spotifyClientId) {
+    throw new Error("Missing EXPO_PUBLIC_SPOTIFY_CLIENT_ID.");
+  }
+
+  if (!tokenResponse.refreshToken) {
+    return null;
+  }
+
+  const response = await refreshAsync(
+    {
+      clientId: spotifyClientId,
+      refreshToken: tokenResponse.refreshToken,
+    },
+    SPOTIFY_DISCOVERY,
+  );
+
+  if (response.refreshToken) {
+    return response;
+  }
+
+  return new TokenResponse({
+    ...response.getRequestConfig(),
+    refreshToken: tokenResponse.refreshToken,
+  });
+}
+
+async function getFreshTokenResponse(tokenResponse: TokenResponse) {
+  if (!tokenResponse.shouldRefresh()) {
+    return tokenResponse;
+  }
+
+  const refreshedToken = await refreshTokenResponse(tokenResponse);
+
+  if (refreshedToken) {
+    await saveToken(refreshedToken);
+  }
+
+  return refreshedToken;
+}
+
 export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
-  const [tokenResponse, setTokenResponse] = useState<TokenResponse | null>(null);
+  const [tokenResponse, setTokenResponse] = useState<TokenResponse | null>(
+    null,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoringAuth, setIsRestoringAuth] = useState(true);
 
@@ -97,9 +154,22 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
     async function restoreToken() {
       try {
         const savedToken = await loadToken();
+        const freshToken = savedToken
+          ? await getFreshTokenResponse(savedToken)
+          : null;
+
+        if (savedToken && !freshToken) {
+          await deleteToken();
+        }
 
         if (isActive) {
-          setTokenResponse(savedToken);
+          setTokenResponse(freshToken);
+        }
+      } catch {
+        await deleteToken();
+
+        if (isActive) {
+          setTokenResponse(null);
         }
       } finally {
         if (isActive) {
@@ -121,7 +191,7 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
   );
 
   const musicService = useMemo(
-    () => new SpotifyMusicService(authSession),
+    () => (authSession ? new SpotifyMusicService(authSession) : null),
     [authSession],
   );
 
@@ -173,69 +243,95 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [promptAsync, redirectUri, request]);
 
-  const refresh = useCallback(async () => {
-    if (!spotifyClientId) {
-      throw new Error("Missing EXPO_PUBLIC_SPOTIFY_CLIENT_ID.");
-    }
-
-    if (!tokenResponse?.refreshToken) {
-      return null;
-    }
-
-    const response = await refreshAsync(
-      {
-        clientId: spotifyClientId,
-        refreshToken: tokenResponse.refreshToken,
-      },
-      SPOTIFY_DISCOVERY,
-    );
-
-    const responseWithRefreshToken =
-      response.refreshToken || !tokenResponse.refreshToken
-        ? response
-        : new TokenResponse({
-            ...response.getRequestConfig(),
-            refreshToken: tokenResponse.refreshToken,
-          });
-
-    await saveToken(responseWithRefreshToken);
-    setTokenResponse(responseWithRefreshToken);
-    return responseWithRefreshToken;
-  }, [tokenResponse]);
-
-  const signOut = useCallback(async () => {
-    await SecureStore.deleteItemAsync(SPOTIFY_TOKEN_KEY);
+  const clearToken = useCallback(async () => {
+    await deleteToken();
     setTokenResponse(null);
   }, []);
 
-  const value = useMemo(
-    () => ({
-      accessToken: tokenResponse?.accessToken ?? null,
-      authSession,
-      isAuthenticated: Boolean(tokenResponse?.accessToken),
+  const refreshIfNeeded = useCallback(async () => {
+    if (!tokenResponse) {
+      return null;
+    }
+
+    try {
+      const freshToken = await getFreshTokenResponse(tokenResponse);
+
+      if (!freshToken) {
+        await clearToken();
+        return null;
+      }
+
+      if (freshToken !== tokenResponse) {
+        setTokenResponse(freshToken);
+      }
+
+      return freshToken;
+    } catch {
+      await clearToken();
+      return null;
+    }
+  }, [clearToken, tokenResponse]);
+
+  useEffect(() => {
+    if (!tokenResponse) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      refreshIfNeeded();
+    }, TOKEN_REFRESH_CHECK_INTERVAL_MS);
+
+    refreshIfNeeded();
+
+    return () => clearInterval(intervalId);
+  }, [refreshIfNeeded, tokenResponse]);
+
+  const signOut = useCallback(async () => {
+    await clearToken();
+  }, [clearToken]);
+
+  const value = useMemo<SpotifyAuthContextValue>(() => {
+    const sharedValue = {
       isLoading,
       isRestoringAuth,
       isReady: Boolean(spotifyClientId && request),
-      musicService,
       redirectUri,
-      refresh,
+      refresh: refreshIfNeeded,
       signIn,
       signOut,
-      tokenResponse,
-    }),
-    [
-      authSession,
-      isLoading,
-      isRestoringAuth,
-      musicService,
-      redirectUri,
-      refresh,
-      request,
-      signIn,
-      signOut,
-      tokenResponse,
-    ],
-  );
+    };
+
+    if (tokenResponse && authSession && musicService) {
+      return {
+        ...sharedValue,
+        accessToken: tokenResponse.accessToken,
+        authSession,
+        isAuthenticated: true,
+        musicService,
+        tokenResponse,
+      };
+    }
+
+    return {
+      ...sharedValue,
+      accessToken: null,
+      authSession: null,
+      isAuthenticated: false,
+      musicService: null,
+      tokenResponse: null,
+    };
+  }, [
+    authSession,
+    isLoading,
+    isRestoringAuth,
+    musicService,
+    redirectUri,
+    refreshIfNeeded,
+    request,
+    signIn,
+    signOut,
+    tokenResponse,
+  ]);
 
   return (
     <SpotifyAuthContext.Provider value={value}>
