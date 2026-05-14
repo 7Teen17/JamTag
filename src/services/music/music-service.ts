@@ -19,6 +19,10 @@ export abstract class MusicService {
     this.authSession = authSession;
   }
 
+  connected(): boolean {
+    return this.authSession?.accessToken ? true : false;
+  }
+
   abstract connect(): Promise<MusicAuthSession>;
   abstract disconnect(): Promise<void>;
   abstract getCurrentPlayback(): Promise<PlaybackState | null>;

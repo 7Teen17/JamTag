@@ -35,7 +35,43 @@ export class SpotifyMusicService extends MusicService {
   }
 
   async getCurrentPlayback(): Promise<PlaybackState | null> {
-    throw new Error("Spotify getCurrentPlayback is not implemented yet.");
+    if (this.connected()) {
+      let response = await fetch(
+        "https://api.spotify.com/v1/me/player/currently-playing",
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${this.authSession?.accessToken}` },
+        },
+      );
+
+      if (!response.ok || response.status === 204) {
+        return null;
+      }
+      const result = await response.json();
+
+      if (result.currently_playing_type !== "track" || !result.item) {
+        return null;
+      }
+
+      let track: MusicTrack = {
+        provider: "spotify",
+        providerTrackId: result.item.id,
+        title: result.item.name,
+        artists: result.item.artists.map((artist: any) => artist.name),
+        album: result.item.album.name,
+        artworkUrl: result.item.album.images?.[0]?.url,
+        durationMs: result.item.duration_ms,
+        isrc: result.item.external_ids?.isrc,
+      };
+
+      return {
+        track: track,
+        isPlaying: result.is_playing,
+        progressMs: result.progress_ms,
+      };
+    }
+
+    return null;
   }
 
   async searchTracks(_query: string): Promise<MusicTrack[]> {
@@ -47,12 +83,12 @@ export class SpotifyMusicService extends MusicService {
   }
 
   protected getAuthorizationHeaders() {
-    if (!this.authSession?.accessToken) {
+    if (!this.connected()) {
       throw new Error("Spotify access token is missing.");
     }
 
     return {
-      Authorization: `Bearer ${this.authSession.accessToken}`,
+      Authorization: `Bearer ${this.authSession?.accessToken}`,
     };
   }
 }
