@@ -12,6 +12,7 @@ import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
 const SONG_END_REFRESH_BUFFER_MS = 3000;
+const MAX_PLAYING_REFRESH_MS = 15000;
 const FALLBACK_PLAYBACK_REFRESH_MS = 20000;
 
 function getNextPlaybackRefreshDelay(playback: PlaybackState | null) {
@@ -27,11 +28,12 @@ function getNextPlaybackRefreshDelay(playback: PlaybackState | null) {
   }
 
   const remainingMs = durationMs - progressMs;
-
-  return Math.max(
+  const songEndRefreshDelay = Math.max(
     SONG_END_REFRESH_BUFFER_MS,
     remainingMs + SONG_END_REFRESH_BUFFER_MS,
   );
+
+  return Math.min(songEndRefreshDelay, MAX_PLAYING_REFRESH_MS);
 }
 
 export default function NowPlayingCard() {
@@ -107,7 +109,7 @@ export default function NowPlayingCard() {
             source={
               playback?.track.artworkUrl
                 ? { uri: playback.track.artworkUrl }
-                : require("@/assets/images/testimage.png")
+                : require("@/assets/images/no_album_cover.png")
             }
             style={styles.albumImage}
           ></Image>

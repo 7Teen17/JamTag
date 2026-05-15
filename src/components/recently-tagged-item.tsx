@@ -7,7 +7,7 @@ export default function RecentlyTaggedItem() {
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require("@/assets/images/testimage.png")}
+          source={require("@/assets/images/no_album_cover.png")}
           style={styles.image}
         ></Image>
       </View>
