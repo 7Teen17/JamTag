@@ -22,7 +22,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     const service = musicService;
     async function loadTrack() {
       setLoading(true);
-      const returned_track: MusicTrack = await service.getTrack(id);
+      const returned_track: MusicTrack | null = await service.getTrack(id);
       setTrack(returned_track);
       setLoading(false);
     }
