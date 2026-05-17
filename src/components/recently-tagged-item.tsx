@@ -33,15 +33,19 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     <View style={styles.container}>
       <View style={styles.imageContainer}>
         <Image
-          source={require("@/assets/images/no_album_cover.png")}
+          source={
+            track?.artworkUrl
+              ? { uri: track.artworkUrl }
+              : require("@/assets/images/no_album_cover.png")
+          }
           style={styles.image}
         ></Image>
       </View>
       <View style={styles.textContainer}>
-        <ThemedText style={styles.title}>
+        <ThemedText style={styles.title} numberOfLines={1} ellipsizeMode="tail">
           {loading ? "Loading..." : track ? track.title : "Not found."}
         </ThemedText>
-        <ThemedText type="smallText">
+        <ThemedText type="smallText" numberOfLines={1} ellipsizeMode="tail">
           {loading ? "..." : track ? track.artists[0] : "Not found."}
         </ThemedText>
         <View style={styles.tagRow}>

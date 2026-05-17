@@ -63,8 +63,28 @@ export class SpotifyMusicService extends MusicService {
     throw new Error("Spotify searchTracks is not implemented yet.");
   }
 
-  async getTrack(_id: string): Promise<MusicTrack> {
-    throw new Error("Spotify getTrack is not implemented yet.");
+  async getTrack(_id: string): Promise<MusicTrack | null> {
+    const response = await fetch("https://api.spotify.com/v1/tracks/" + _id, {
+      method: "GET",
+      headers: this.getAuthorizationHeaders(),
+    });
+
+    if (!response.ok || response.status === 204) {
+      return null;
+    }
+
+    const result = await response.json();
+
+    return {
+      provider: "spotify",
+      providerTrackId: result.id,
+      title: result.name,
+      artists: result.artists.map((artist: any) => artist.name),
+      album: result.album.name,
+      artworkUrl: result.album.images?.[0]?.url,
+      durationMs: result.duration_ms,
+      isrc: result.external_ids?.isrc,
+    };
   }
 
   protected getAuthorizationHeaders() {

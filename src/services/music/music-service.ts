@@ -25,5 +25,5 @@ export abstract class MusicService {
 
   abstract getCurrentPlayback(): Promise<PlaybackState | null>;
   abstract searchTracks(query: string): Promise<MusicTrack[]>;
-  abstract getTrack(id: string): Promise<MusicTrack>;
+  abstract getTrack(id: string): Promise<MusicTrack | null>;
 }
