@@ -1,14 +1,18 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Button, ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
+  const router = useRouter();
+
   const test_songs = [
-    ["Blinding Lights", "The Weeknd"],
-    ["All You Had To Do Was Stay", "Taylor Swift"],
-    ["marjorie", "Taylor Swift"],
-    ["Livin' On a Prayer", "Bon Jovi"],
+    "0nbXyq5TXYPCO7pr3N8S4I",
+    "4XcZp2xqbiD8YsnPboNUDo",
+    "6CUP2khYzdphXebxVTfPE3",
+    "7EW7Yivb93qKAtp5qEm5of",
+    "45J4avUb9Ni0bnETYaYFVJ",
   ];
 
   return (
@@ -20,11 +24,16 @@ export default function HomeScreen() {
         style={styles.recentItemsScroller}
         contentContainerStyle={styles.recentItems}
       >
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
-        <RecentlyTaggedItem></RecentlyTaggedItem>
+        {test_songs.map((song) => {
+          return <RecentlyTaggedItem key={song} id={song}></RecentlyTaggedItem>;
+        })}
       </ScrollView>
+      <Button
+        onPress={() => {
+          router.push("/login");
+        }}
+        title="Go to Login"
+      ></Button>
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
       </View>

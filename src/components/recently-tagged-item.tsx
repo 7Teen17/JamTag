@@ -1,8 +1,34 @@
+import { useEffect, useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
+import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
+import { MusicTrack } from "../services/music/types";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
-export default function RecentlyTaggedItem() {
+type RecentlyTaggedItemProps = {
+  id: string;
+};
+
+export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
+  const [track, setTrack] = useState<MusicTrack | null>(null);
+  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, musicService } = useSpotifyAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated || !musicService) {
+      setLoading(false);
+      return;
+    }
+    const service = musicService;
+    async function loadTrack() {
+      setLoading(true);
+      const returned_track: MusicTrack = await service.getTrack(id);
+      setTrack(returned_track);
+      setLoading(false);
+    }
+    loadTrack();
+  }, [id, isAuthenticated, musicService]);
+
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
@@ -12,8 +38,12 @@ export default function RecentlyTaggedItem() {
         ></Image>
       </View>
       <View style={styles.textContainer}>
-        <ThemedText style={styles.title}>Blinding Lights</ThemedText>
-        <ThemedText type="smallText">The Weeknd</ThemedText>
+        <ThemedText style={styles.title}>
+          {loading ? "Loading..." : track ? track.title : "Not found."}
+        </ThemedText>
+        <ThemedText type="smallText">
+          {loading ? "..." : track ? track.artists[0] : "Not found."}
+        </ThemedText>
         <View style={styles.tagRow}>
           <Tag></Tag>
           <Tag></Tag>
