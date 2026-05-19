@@ -34,6 +34,12 @@ export default function HomeScreen() {
         }}
         title="Go to Login"
       ></Button>
+      <Button
+        onPress={() => {
+          router.push("/editTags");
+        }}
+        title="Go to Modal"
+      ></Button>
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
       </View>

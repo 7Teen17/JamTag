@@ -49,8 +49,8 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
+            name="editTags"
+            options={{ presentation: "modal", title: "Edit Tags" }}
           />
           <Stack.Screen name="login" options={{ headerShown: false }} />
         </Stack>
