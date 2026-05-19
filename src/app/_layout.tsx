@@ -5,6 +5,7 @@ import {
 } from "@react-navigation/native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { SpotifyAuthProvider } from "@/src/hooks/auth/SpotifyAuthProvider";
@@ -37,25 +38,29 @@ export default function RootLayout() {
   }
 
   return (
-    <SpotifyAuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-        <Stack>
-          <Stack.Screen
-            name="(tabs)"
-            options={{
-              headerShown: true,
-              title: "JamTag",
-              headerTitleStyle: { fontFamily: "UrbanistBold" },
-            }}
-          />
-          <Stack.Screen
-            name="editTags"
-            options={{ presentation: "modal", title: "Edit Tags" }}
-          />
-          <Stack.Screen name="login" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </ThemeProvider>
-    </SpotifyAuthProvider>
+    <GestureHandlerRootView>
+      <SpotifyAuthProvider>
+        <ThemeProvider
+          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+        >
+          <Stack>
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: true,
+                title: "JamTag",
+                headerTitleStyle: { fontFamily: "UrbanistBold" },
+              }}
+            />
+            <Stack.Screen
+              name="editTags"
+              options={{ presentation: "modal", title: "Edit Tags" }}
+            />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+          </Stack>
+          <StatusBar style="auto" />
+        </ThemeProvider>
+      </SpotifyAuthProvider>
+    </GestureHandlerRootView>
   );
 }
