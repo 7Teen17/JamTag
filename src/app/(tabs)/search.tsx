@@ -4,6 +4,14 @@ import { Search } from "lucide-react-native";
 import { StyleSheet, View } from "react-native";
 
 export default function SearchScreen() {
+  const test_songs = [
+    "0nbXyq5TXYPCO7pr3N8S4I",
+    "4XcZp2xqbiD8YsnPboNUDo",
+    "6CUP2khYzdphXebxVTfPE3",
+    "7EW7Yivb93qKAtp5qEm5of",
+    "45J4avUb9Ni0bnETYaYFVJ",
+  ];
+
   return (
     <>
       <View style={styles.searchBar}>
@@ -12,10 +20,9 @@ export default function SearchScreen() {
           Search Songs, Artists, Albums
         </ThemedText>
       </View>
-      <SearchedItem></SearchedItem>
-      <SearchedItem></SearchedItem>
-      <SearchedItem></SearchedItem>
-      <SearchedItem></SearchedItem>
+      {test_songs.map((song) => (
+        <SearchedItem id={song} key={song}></SearchedItem>
+      ))}
     </>
   );
 }
