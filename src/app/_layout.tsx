@@ -1,3 +1,4 @@
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
 import {
   DarkTheme,
   DefaultTheme,
@@ -38,29 +39,31 @@ export default function RootLayout() {
   }
 
   return (
-    <GestureHandlerRootView>
-      <SpotifyAuthProvider>
-        <ThemeProvider
-          value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-        >
-          <Stack>
-            <Stack.Screen
-              name="(tabs)"
-              options={{
-                headerShown: true,
-                title: "JamTag",
-                headerTitleStyle: { fontFamily: "UrbanistBold" },
-              }}
-            />
-            <Stack.Screen
-              name="editTags"
-              options={{ presentation: "modal", title: "Edit Tags" }}
-            />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-          </Stack>
-          <StatusBar style="auto" />
-        </ThemeProvider>
-      </SpotifyAuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <SpotifyAuthProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+          >
+            <Stack>
+              <Stack.Screen
+                name="(tabs)"
+                options={{
+                  headerShown: true,
+                  title: "JamTag",
+                  headerTitleStyle: { fontFamily: "UrbanistBold" },
+                }}
+              />
+              <Stack.Screen
+                name="editTags"
+                options={{ presentation: "modal", title: "Edit Tags" }}
+              />
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+            </Stack>
+            <StatusBar style="auto" />
+          </ThemeProvider>
+        </SpotifyAuthProvider>
+      </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
 }

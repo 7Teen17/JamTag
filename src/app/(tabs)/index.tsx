@@ -1,3 +1,4 @@
+import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
@@ -6,6 +7,7 @@ import { Button, ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { openSheet, closeSheet } = useBottomSheet();
 
   const test_songs = [
     "0nbXyq5TXYPCO7pr3N8S4I",
@@ -36,10 +38,17 @@ export default function HomeScreen() {
       ></Button>
       <Button
         onPress={() => {
-          router.push("/editTags");
+          openSheet();
         }}
-        title="Go to Modal"
+        title="Open Modal"
       ></Button>
+      <Button
+        onPress={() => {
+          closeSheet();
+        }}
+        title="Close Modal"
+      ></Button>
+
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
       </View>
