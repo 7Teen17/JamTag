@@ -38,7 +38,7 @@ export default function HomeScreen() {
       ></Button>
       <Button
         onPress={() => {
-          openSheet();
+          openSheet("5enxwA8aAbwZbf5qCHORXi");
         }}
         title="Open Modal"
       ></Button>
