@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { MusicTrack } from "../services/music/types";
+import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
@@ -13,6 +14,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
   const [track, setTrack] = useState<MusicTrack | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, musicService } = useSpotifyAuth();
+  const { openSheet } = useBottomSheet();
 
   useEffect(() => {
     if (!isAuthenticated || !musicService) {
@@ -30,7 +32,14 @@ export default function SearchedItem({ id }: SearchedItemProps) {
   }, [id, isAuthenticated, musicService]);
 
   return (
-    <View style={styles.container}>
+    <TouchableOpacity
+      onPress={(event) => {
+        if (track) {
+          openSheet(track.providerTrackId);
+        }
+      }}
+      style={styles.container}
+    >
       <Image
         source={
           track?.artworkUrl
@@ -58,7 +67,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
         </ThemedText>
         <Tag></Tag>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

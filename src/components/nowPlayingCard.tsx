@@ -1,13 +1,8 @@
 import { useEffect, useState } from "react";
-import {
-  Image,
-  StyleSheet,
-  Text,
-  TouchableHighlight,
-  View,
-} from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import type { PlaybackState } from "../services/music/types";
+import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
@@ -39,6 +34,7 @@ function getNextPlaybackRefreshDelay(playback: PlaybackState | null) {
 export default function NowPlayingCard() {
   const { isAuthenticated, musicService } = useSpotifyAuth();
   const [playback, setPlayback] = useState<PlaybackState | null>(null);
+  const { openSheet } = useBottomSheet();
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -98,11 +94,19 @@ export default function NowPlayingCard() {
             <Tag></Tag>
             <Tag></Tag>
           </View>
-          <TouchableHighlight style={styles.tagButton}>
+          <TouchableOpacity
+            style={styles.tagButton}
+            onPress={(event) => {
+              if (playback) {
+                openSheet(playback.track.providerTrackId);
+              }
+            }}
+            activeOpacity={0.5}
+          >
             <View style={styles.tagButtonContent}>
               <Text style={styles.tagButtonText}>Tag This Song</Text>
             </View>
-          </TouchableHighlight>
+          </TouchableOpacity>
         </View>
         <View style={styles.imageContainer}>
           <Image

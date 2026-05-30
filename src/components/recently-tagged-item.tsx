@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, View } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { MusicTrack } from "../services/music/types";
+import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
@@ -13,6 +14,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
   const [track, setTrack] = useState<MusicTrack | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, musicService } = useSpotifyAuth();
+  const { openSheet } = useBottomSheet();
 
   useEffect(() => {
     if (!isAuthenticated || !musicService) {
@@ -30,31 +32,44 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
   }, [id, isAuthenticated, musicService]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.imageContainer}>
-        <Image
-          source={
-            track?.artworkUrl
-              ? { uri: track.artworkUrl }
-              : require("@/assets/images/no_album_cover.png")
-          }
-          style={styles.image}
-        ></Image>
-      </View>
-      <View style={styles.textContainer}>
-        <ThemedText style={styles.title} numberOfLines={1} ellipsizeMode="tail">
-          {loading ? "Loading..." : track ? track.title : "Not found."}
-        </ThemedText>
-        <ThemedText type="smallText" numberOfLines={1} ellipsizeMode="tail">
-          {loading ? "..." : track ? track.artists[0] : "Not found."}
-        </ThemedText>
-        <View style={styles.tagRow}>
-          <Tag></Tag>
-          <Tag></Tag>
-          <ThemedText type="smallText">+17</ThemedText>
+    <TouchableOpacity
+      onPress={(event) => {
+        if (track) {
+          openSheet(track.providerTrackId);
+        }
+      }}
+      activeOpacity={0.5}
+    >
+      <View style={styles.container}>
+        <View style={styles.imageContainer}>
+          <Image
+            source={
+              track?.artworkUrl
+                ? { uri: track.artworkUrl }
+                : require("@/assets/images/no_album_cover.png")
+            }
+            style={styles.image}
+          ></Image>
+        </View>
+        <View style={styles.textContainer}>
+          <ThemedText
+            style={styles.title}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {loading ? "Loading..." : track ? track.title : "Not found."}
+          </ThemedText>
+          <ThemedText type="smallText" numberOfLines={1} ellipsizeMode="tail">
+            {loading ? "..." : track ? track.artists[0] : "Not found."}
+          </ThemedText>
+          <View style={styles.tagRow}>
+            <Tag></Tag>
+            <Tag></Tag>
+            <ThemedText type="smallText">+17</ThemedText>
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 }
 

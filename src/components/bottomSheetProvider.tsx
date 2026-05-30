@@ -15,7 +15,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ThemedText } from "./default/themed-text";
 import SearchedItem from "./searchedItem";
@@ -42,8 +42,10 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const snapPoints = useMemo(() => ["50%", "80%"], []);
   const [trackId, setTrackId] = useState<string | null>(null);
 
-  const openSheet = useCallback(async (trackId?: string) => {
-    setTrackId(trackId ? trackId : null);
+  const openSheet = useCallback(async (providedTrackId?: string) => {
+    if (providedTrackId && providedTrackId !== trackId) {
+      setTrackId(providedTrackId);
+    }
     bottomSheetRef.current?.present();
   }, []);
 
@@ -96,9 +98,9 @@ function Footer({ animatedFooterPosition }: BottomSheetFooterProps) {
       bottomInset={bottomSafeArea}
       animatedFooterPosition={animatedFooterPosition}
     >
-      <View style={styles.testing}>
+      <TouchableOpacity style={styles.testing}>
         <ThemedText type="title">Save Tags</ThemedText>
-      </View>
+      </TouchableOpacity>
     </BottomSheetFooter>
   );
 }
@@ -109,7 +111,7 @@ function Backdrop(props: BottomSheetBackdropProps) {
       {...props}
       appearsOnIndex={0}
       disappearsOnIndex={-1}
-      opacity={0.8}
+      opacity={0.75}
     ></BottomSheetBackdrop>
   );
 }

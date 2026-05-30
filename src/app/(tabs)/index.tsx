@@ -36,18 +36,6 @@ export default function HomeScreen() {
         }}
         title="Go to Login"
       ></Button>
-      <Button
-        onPress={() => {
-          openSheet("5enxwA8aAbwZbf5qCHORXi");
-        }}
-        title="Open Modal"
-      ></Button>
-      <Button
-        onPress={() => {
-          closeSheet();
-        }}
-        title="Close Modal"
-      ></Button>
 
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
