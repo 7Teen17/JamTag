@@ -17,8 +17,9 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
-import SearchedItem from "./searchedItem";
+import Tag from "./tag";
 
 type BottomSheetContextValue = {
   openSheet: (trackId?: string) => void;
@@ -58,6 +59,15 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
     [openSheet, closeSheet],
   );
 
+  const data = [
+    "Cool",
+    "Late Night",
+    "Fun",
+    "Sleepy Time zzzzz",
+    "Morning",
+    "Slow and Sad",
+  ];
+
   return (
     <BottomSheetContext.Provider value={contextValue}>
       {children}
@@ -76,7 +86,27 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           <ThemedText type="title" style={styles.editTagsText}>
             Edit Tags
           </ThemedText>
-          <SearchedItem id={trackId ? trackId : ""}></SearchedItem>
+          <CurrentTaggingItem id={trackId ? trackId : ""}></CurrentTaggingItem>
+          <View
+            style={{
+              height: 1,
+              backgroundColor: "#333",
+              marginVertical: 8,
+            }}
+          />
+          <View style={{ margin: 5 }}>
+            <ThemedText style={styles.tagsText}>TAGS</ThemedText>
+            <View style={styles.tagContainer}>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <Tag
+                  key={index}
+                  value={data[Math.floor(Math.random() * data.length)]}
+                  type="large"
+                  removeable
+                />
+              ))}
+            </View>
+          </View>
           <View
             style={{
               height: 1,
@@ -98,7 +128,7 @@ function Footer({ animatedFooterPosition }: BottomSheetFooterProps) {
       bottomInset={bottomSafeArea}
       animatedFooterPosition={animatedFooterPosition}
     >
-      <TouchableOpacity style={styles.testing}>
+      <TouchableOpacity style={styles.saveButton}>
         <ThemedText type="title">Save Tags</ThemedText>
       </TouchableOpacity>
     </BottomSheetFooter>
@@ -122,7 +152,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     color: "#878787",
   },
-  testing: {
+  saveButton: {
     width: "auto",
     height: 50,
     borderRadius: 10,
@@ -133,5 +163,17 @@ const styles = StyleSheet.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+  },
+  tagContainer: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  tagsText: {
+    color: "#7e7e7e",
+    fontFamily: "UrbanistBold",
+    fontSize: 14,
+    marginBottom: 5,
   },
 });

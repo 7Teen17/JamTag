@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { MusicTrack } from "../services/music/types";
-import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
-import Tag from "./tag";
 
 type SearchedItemProps = {
   id: string;
 };
 
-export default function SearchedItem({ id }: SearchedItemProps) {
+export default function CurrentTaggingItem({ id }: SearchedItemProps) {
   const [track, setTrack] = useState<MusicTrack | null>(null);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, musicService } = useSpotifyAuth();
-  const { openSheet } = useBottomSheet();
 
   useEffect(() => {
     if (!isAuthenticated || !musicService) {
@@ -32,14 +29,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
   }, [id, isAuthenticated, musicService]);
 
   return (
-    <TouchableOpacity
-      onPress={(event) => {
-        if (track) {
-          openSheet(track.providerTrackId);
-        }
-      }}
-      style={styles.container}
-    >
+    <View style={styles.container}>
       <Image
         source={
           track?.artworkUrl
@@ -65,9 +55,8 @@ export default function SearchedItem({ id }: SearchedItemProps) {
         >
           {loading ? "..." : track ? track.artists[0] : "Not found."}
         </ThemedText>
-        <Tag value="Cool"></Tag>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 }
 
@@ -95,6 +84,7 @@ const styles = StyleSheet.create({
   },
   infoView: {
     flex: 1,
+    justifyContent: "center",
   },
   tagButton: {
     width: 80,

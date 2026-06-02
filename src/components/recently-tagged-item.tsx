@@ -63,8 +63,8 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
             {loading ? "..." : track ? track.artists[0] : "Not found."}
           </ThemedText>
           <View style={styles.tagRow}>
-            <Tag></Tag>
-            <Tag></Tag>
+            <Tag value="Cool"></Tag>
+            <Tag value="Cool"></Tag>
             <ThemedText type="smallText">+17</ThemedText>
           </View>
         </View>

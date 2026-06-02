@@ -91,8 +91,8 @@ export default function NowPlayingCard() {
             {playback ? playback.track.artists[0] : "None"}
           </ThemedText>
           <View style={styles.tagRow}>
-            <Tag></Tag>
-            <Tag></Tag>
+            <Tag value="Cool"></Tag>
+            <Tag value="Cool"></Tag>
           </View>
           <TouchableOpacity
             style={styles.tagButton}
