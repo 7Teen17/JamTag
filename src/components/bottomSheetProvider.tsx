@@ -6,6 +6,7 @@ import {
   BottomSheetModal,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
+import { Search } from "lucide-react-native";
 import {
   createContext,
   type PropsWithChildren,
@@ -114,6 +115,16 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
               marginVertical: 8,
             }}
           />
+          {/* Search bar */}
+          <View style={styles.searchBar}>
+            <Search style={styles.searchIcon}></Search>
+            <ThemedText style={styles.searchText}>
+              Search or create tags
+            </ThemedText>
+          </View>
+          <View style={{ margin: 5 }}>
+            <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
+          </View>
         </BottomSheetView>
       </BottomSheetModal>
     </BottomSheetContext.Provider>
@@ -175,5 +186,28 @@ const styles = StyleSheet.create({
     fontFamily: "UrbanistBold",
     fontSize: 14,
     marginBottom: 5,
+  },
+  searchBar: {
+    backgroundColor: "#272727",
+    width: "auto",
+    height: 50,
+    margin: 10,
+    padding: 3,
+    borderRadius: 5,
+    borderColor: "#535353",
+    borderWidth: 1,
+    alignItems: "center",
+    display: "flex",
+    flexDirection: "row",
+  },
+  searchIcon: {
+    color: "white",
+    marginLeft: 5,
+    marginRight: 7,
+  },
+  searchText: {
+    fontFamily: "UrbanistRegular",
+    fontSize: 14,
+    color: "#8D8D8D",
   },
 });
