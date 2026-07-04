@@ -4,7 +4,7 @@ export type MusicTrack = {
   provider: MusicProviderId;
   providerTrackId: string;
   title: string;
-  artists: string[];
+  artist: string;
   album?: string;
   artworkUrl?: string;
   durationMs?: number;

@@ -53,7 +53,7 @@ export default function CurrentTaggingItem({ id }: SearchedItemProps) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {loading ? "..." : track ? track.artists[0] : "Not found."}
+          {loading ? "..." : track ? track.artist : "Not found."}
         </ThemedText>
       </View>
     </View>

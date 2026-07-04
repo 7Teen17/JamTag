@@ -88,7 +88,7 @@ export default function NowPlayingCard() {
             {playback ? playback.track.title : "None"}
           </ThemedText>
           <ThemedText type="default" numberOfLines={1} ellipsizeMode="tail">
-            {playback ? playback.track.artists[0] : "None"}
+            {playback ? playback.track.artist : "None"}
           </ThemedText>
           <View style={styles.tagRow}>
             <Tag value="Cool"></Tag>
