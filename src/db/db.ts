@@ -104,7 +104,7 @@ export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
   }
 }
 
-export function getTagsFromSong(song: MusicTrack) {
+export function getTagsFromSong(providerTrackId: string) {
   try {
     return (
       db.getAllSync(
@@ -114,7 +114,7 @@ export function getTagsFromSong(song: MusicTrack) {
           JOIN tags AS t ON t.id = st.tag_id
           WHERE st.song_id = ?
         `,
-        [song.providerTrackId],
+        [providerTrackId],
       ) as { name: string }[]
     ).map((row) => row.name);
   } catch (error) {

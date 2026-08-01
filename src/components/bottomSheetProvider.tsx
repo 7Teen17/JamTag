@@ -18,6 +18,7 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { getTagsFromSong } from "../db/db";
 import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
@@ -44,12 +45,15 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const snapPoints = useMemo(() => ["50%", "80%"], []);
   const [trackId, setTrackId] = useState<string | null>(null);
 
-  const openSheet = useCallback(async (providedTrackId?: string) => {
-    if (providedTrackId && providedTrackId !== trackId) {
-      setTrackId(providedTrackId);
-    }
-    bottomSheetRef.current?.present();
-  }, []);
+  const openSheet = useCallback(
+    async (providedTrackId?: string) => {
+      if (providedTrackId && providedTrackId !== trackId) {
+        setTrackId(providedTrackId);
+      }
+      bottomSheetRef.current?.present();
+    },
+    [trackId],
+  );
 
   const closeSheet = useCallback(() => {
     bottomSheetRef.current?.dismiss();
@@ -68,6 +72,8 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
     "Morning",
     "Slow and Sad",
   ];
+
+  const tags = trackId != null ? getTagsFromSong(trackId) : [];
 
   return (
     <BottomSheetContext.Provider value={contextValue}>
@@ -98,7 +104,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>TAGS</ThemedText>
             <View style={styles.tagContainer}>
-              {Array.from({ length: 4 }).map((_, index) => (
+              {tags.map((_, index) => (
                 <Tag
                   key={index}
                   value={data[Math.floor(Math.random() * data.length)]}
