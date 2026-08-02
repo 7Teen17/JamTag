@@ -3,6 +3,16 @@ import { MusicTrack } from "../services/music/types";
 
 const db = SQLite.openDatabaseSync("music.db");
 
+function normalizeTag(tag: string) {
+  const normalizedTag = tag.trim().toLowerCase();
+
+  if (!normalizedTag) {
+    throw new Error("Tag name cannot be empty.");
+  }
+
+  return normalizedTag;
+}
+
 export function setupDB() {
   db.execSync(`
     PRAGMA foreign_keys = ON;
@@ -34,8 +44,20 @@ export function setupDB() {
 }
 
 export function cacheSong(song: MusicTrack) {
-  try {
-    db.runSync("INSERT OR IGNORE INTO songs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+  db.runSync(
+    `
+      INSERT INTO songs (id, provider, title, artist, album, artwork_url, durationMs, isrc)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        provider = excluded.provider,
+        title = excluded.title,
+        artist = excluded.artist,
+        album = excluded.album,
+        artwork_url = excluded.artwork_url,
+        durationMs = excluded.durationMs,
+        isrc = excluded.isrc
+    `,
+    [
       song.providerTrackId,
       song.provider,
       song.title,
@@ -44,106 +66,83 @@ export function cacheSong(song: MusicTrack) {
       song.artworkUrl ?? null,
       song.durationMs ?? null,
       song.isrc ?? null,
-    ]);
-  } catch (error) {
-    console.error("Could not cache song: ", error);
-  }
+    ],
+  );
 }
 
 export function addTag(tag: string) {
-  try {
-    const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
-      tag,
-    ]) as { id: number } | null;
+  const normalizedTag = normalizeTag(tag);
+  const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
+    normalizedTag,
+  ]) as { id: number } | null;
 
-    if (existingTag) {
-      return existingTag.id;
-    }
-
-    const insertResult = db.runSync("INSERT INTO tags (name) VALUES (?)", [
-      tag,
-    ]);
-    return insertResult.lastInsertRowId;
-  } catch (error) {
-    console.error(error);
-    return null;
+  if (existingTag) {
+    return existingTag.id;
   }
+
+  const insertResult = db.runSync("INSERT INTO tags (name) VALUES (?)", [
+    normalizedTag,
+  ]);
+  return insertResult.lastInsertRowId;
 }
 
 export function deleteTag(tag: string) {
-  try {
-    db.runSync("DELETE FROM tags WHERE name = ?", [tag]);
-  } catch (error) {
-    console.error(error);
-  }
+  db.runSync("DELETE FROM tags WHERE name = ?", [normalizeTag(tag)]);
 }
 
 export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
-  try {
-    const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
-      tag,
-    ]) as { id: number } | null;
+  const normalizedTag = normalizeTag(tag);
+  const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
+    normalizedTag,
+  ]) as { id: number } | null;
 
-    if (!existingTag) {
-      return;
-    }
+  if (!existingTag) {
+    return;
+  }
 
-    if (isEnabled) {
-      db.runSync(
-        "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
-        [song.providerTrackId, existingTag.id],
-      );
-    } else {
-      db.runSync("DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?", [
-        song.providerTrackId,
-        existingTag.id,
-      ]);
-    }
-  } catch (error) {
-    console.error(error);
+  if (isEnabled) {
+    db.runSync(
+      "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
+      [song.providerTrackId, existingTag.id],
+    );
+  } else {
+    db.runSync("DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?", [
+      song.providerTrackId,
+      existingTag.id,
+    ]);
   }
 }
 
 export function getTagsFromSong(providerTrackId: string) {
-  try {
-    return (
-      db.getAllSync(
-        `
+  return (
+    db.getAllSync(
+      `
           SELECT t.name
           FROM song_tags AS st
           JOIN tags AS t ON t.id = st.tag_id
           WHERE st.song_id = ?
         `,
-        [providerTrackId],
-      ) as { name: string }[]
-    ).map((row) => row.name);
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+      [providerTrackId],
+    ) as { name: string }[]
+  ).map((row) => row.name);
 }
 
 export function getSongsFromTag(tag: string) {
-  try {
-    const tagRow = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
-      tag,
-    ]) as { id: number } | null;
+  const tagRow = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
+    normalizeTag(tag),
+  ]) as { id: number } | null;
 
-    if (!tagRow) {
-      return [];
-    }
+  if (!tagRow) {
+    return [];
+  }
 
-    return db.getAllSync(
-      `
-        SELECT s.id, s.provider, s.title, s.artist, s.album, s.artwork_url AS artworkUrl, s.durationMs, s.isrc
+  return db.getAllSync(
+    `
+        SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album, s.artwork_url AS artworkUrl, s.durationMs, s.isrc
         FROM song_tags AS st
         JOIN songs AS s ON s.id = st.song_id
         WHERE st.tag_id = ?
       `,
-      [tagRow.id],
-    );
-  } catch (error) {
-    console.log(error);
-    return [];
-  }
+    [tagRow.id],
+  ) as MusicTrack[];
 }
