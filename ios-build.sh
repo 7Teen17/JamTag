@@ -1,1 +1,1 @@
-eas build --profile development --platform ios
+npx eas-cli@latest  build --profile development --platform ios
