@@ -1,3 +1,4 @@
+import { cacheSong, getCachedSong } from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
 import type { MusicTrack, PlaybackState } from "../types";
@@ -64,6 +65,12 @@ export class SpotifyMusicService extends MusicService {
   }
 
   async getTrack(_id: string): Promise<MusicTrack | null> {
+    //try cached song first
+    const dbSong = getCachedSong(_id);
+    if (dbSong != null) {
+      return dbSong;
+    }
+
     const response = await fetch("https://api.spotify.com/v1/tracks/" + _id, {
       method: "GET",
       headers: this.getAuthorizationHeaders(),
@@ -75,7 +82,7 @@ export class SpotifyMusicService extends MusicService {
 
     const result = await response.json();
 
-    return {
+    const song: MusicTrack = {
       provider: "spotify",
       providerTrackId: result.id,
       title: result.name,
@@ -85,6 +92,10 @@ export class SpotifyMusicService extends MusicService {
       durationMs: result.duration_ms,
       isrc: result.external_ids?.isrc,
     };
+
+    cacheSong(song);
+
+    return song;
   }
 
   protected getAuthorizationHeaders() {

@@ -70,6 +70,25 @@ export function cacheSong(song: MusicTrack) {
   );
 }
 
+export function getCachedSong(providerTrackId: string): MusicTrack | null {
+  return db.getFirstSync<MusicTrack>(
+    `
+      SELECT
+        id AS providerTrackId,
+        provider,
+        title,
+        artist,
+        album,
+        artwork_url AS artworkUrl,
+        durationMs,
+        isrc
+      FROM songs
+      WHERE id = ?
+    `,
+    [providerTrackId],
+  );
+}
+
 export function addTag(tag: string) {
   const normalizedTag = normalizeTag(tag);
   const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
