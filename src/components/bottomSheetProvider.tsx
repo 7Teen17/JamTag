@@ -4,6 +4,7 @@ import {
   BottomSheetFooter,
   BottomSheetFooterProps,
   BottomSheetModal,
+  BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Search } from "lucide-react-native";
@@ -44,6 +45,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["50%", "80%"], []);
   const [trackId, setTrackId] = useState<string | null>(null);
+  const [tagSearch, setTagSearch] = useState("");
 
   const openSheet = useCallback(
     async (providedTrackId?: string) => {
@@ -63,15 +65,6 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
     () => ({ openSheet, closeSheet }),
     [openSheet, closeSheet],
   );
-
-  const data = [
-    "Cool",
-    "Late Night",
-    "Fun",
-    "Sleepy Time zzzzz",
-    "Morning",
-    "Slow and Sad",
-  ];
 
   const tags = trackId != null ? getTagsFromSong(trackId) : [];
 
@@ -101,17 +94,26 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
               marginVertical: 8,
             }}
           />
-          <View style={{ margin: 5 }}>
+          <View
+            style={{
+              margin: 5,
+              marginBottom: 15,
+            }}
+          >
             <ThemedText style={styles.tagsText}>TAGS</ThemedText>
             <View style={styles.tagContainer}>
-              {tags.map((_, index) => (
-                <Tag
-                  key={index}
-                  value={data[Math.floor(Math.random() * data.length)]}
-                  type="large"
-                  removeable
-                />
+              {tags.map((val, index) => (
+                <Tag key={index} value={val} type="large" removeable />
               ))}
+              {tags.length == 0 && (
+                <View style={{ width: "100%" }}>
+                  <ThemedText
+                    style={[styles.tagsText, { textAlign: "center" }]}
+                  >
+                    No Tags Found
+                  </ThemedText>
+                </View>
+              )}
             </View>
           </View>
           <View
@@ -124,9 +126,13 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           {/* Search bar */}
           <View style={styles.searchBar}>
             <Search style={styles.searchIcon}></Search>
-            <ThemedText style={styles.searchText}>
-              Search or create tags
-            </ThemedText>
+            <BottomSheetTextInput
+              style={styles.searchText}
+              value={tagSearch}
+              onChangeText={setTagSearch}
+              placeholder="Search or Create Tags"
+              placeholderTextColor="#8D8D8D"
+            />
           </View>
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
@@ -212,6 +218,7 @@ const styles = StyleSheet.create({
     marginRight: 7,
   },
   searchText: {
+    flex: 1,
     fontFamily: "UrbanistRegular",
     fontSize: 14,
     color: "#8D8D8D",
