@@ -81,6 +81,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
         handleIndicatorStyle={{ backgroundColor: "#adadad" }}
         footerComponent={Footer}
         backdropComponent={Backdrop}
+        onDismiss={() => setTagSearch("")}
       >
         <BottomSheetView>
           <ThemedText type="title" style={styles.editTagsText}>
@@ -136,6 +137,9 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           </View>
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
+            {tagSearch.trim() && (
+              <Tag type="large" value={`Create tag '${tagSearch}'`} addable />
+            )}
           </View>
         </BottomSheetView>
       </BottomSheetModal>
