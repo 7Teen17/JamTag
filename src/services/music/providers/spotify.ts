@@ -1,4 +1,4 @@
-import { cacheSong, getCachedSong } from "@/src/db/db";
+import { getCachedSong } from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
 import type { MusicTrack, PlaybackState } from "../types";
@@ -92,8 +92,6 @@ export class SpotifyMusicService extends MusicService {
       durationMs: result.duration_ms,
       isrc: result.external_ids?.isrc,
     };
-
-    cacheSong(song);
 
     return song;
   }
