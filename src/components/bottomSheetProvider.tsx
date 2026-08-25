@@ -19,7 +19,7 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getTagsFromSong } from "../db/db";
+import { getAllTags, getTagsFromSong } from "../db/db";
 import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
@@ -67,6 +67,12 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   );
 
   const tags = trackId != null ? getTagsFromSong(trackId) : [];
+  const normalizedSearch = tagSearch.trim().toLowerCase();
+  const suggestions = getAllTags().filter(
+    (tag) =>
+      !tags.includes(tag) &&
+      (!normalizedSearch || tag.toLowerCase().includes(normalizedSearch)),
+  );
 
   return (
     <BottomSheetContext.Provider value={contextValue}>
@@ -137,9 +143,14 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           </View>
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
-            {tagSearch.trim() && (
-              <Tag type="large" value={`Create tag '${tagSearch}'`} addable />
-            )}
+            <View style={styles.tagContainer}>
+              {suggestions.map((tag) => (
+                <Tag key={tag} type="large" value={tag} addable />
+              ))}
+              {tagSearch.trim() && suggestions.length === 0 && (
+                <Tag type="large" value={`Create tag '${tagSearch}'`} addable />
+              )}
+            </View>
           </View>
         </BottomSheetView>
       </BottomSheetModal>

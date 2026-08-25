@@ -148,6 +148,12 @@ export function getTagsFromSong(providerTrackId: string) {
   ).map((row) => row.name);
 }
 
+export function getAllTags() {
+  return (
+    db.getAllSync("SELECT name FROM tags ORDER BY name") as { name: string }[]
+  ).map((row) => row.name);
+}
+
 export function getSongsFromTag(tag: string) {
   const tagRow = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
     normalizeTag(tag),
