@@ -89,7 +89,7 @@ export function getCachedSong(providerTrackId: string): MusicTrack | null {
   );
 }
 
-export function addTag(tag: string) {
+export function createTag(tag: string) {
   const normalizedTag = normalizeTag(tag);
   const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
     normalizedTag,
@@ -120,6 +120,8 @@ export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
   }
 
   if (isEnabled) {
+    cacheSong(song);
+
     db.runSync(
       "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
       [song.providerTrackId, existingTag.id],
