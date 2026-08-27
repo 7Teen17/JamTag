@@ -1,5 +1,5 @@
 import { Plus, X } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { ThemedText } from "./default/themed-text";
 
 type TagProps = {
@@ -7,12 +7,22 @@ type TagProps = {
   type?: "regular" | "large";
   removeable?: boolean;
   addable?: boolean;
+  onPress?: () => void;
 };
 
-export default function Tag({ value, type, removeable, addable }: TagProps) {
+export default function Tag({
+  value,
+  type,
+  removeable,
+  addable,
+  onPress,
+}: TagProps) {
   const isLarge = type ? type === "large" : false;
   return (
-    <View style={[styles.container, addable && styles.addableContainer]}>
+    <Pressable
+      style={[styles.container, addable && styles.addableContainer]}
+      onPress={onPress}
+    >
       <ThemedText type="tag" style={isLarge ? styles.largeText : styles.text}>
         {value}
       </ThemedText>
@@ -26,7 +36,7 @@ export default function Tag({ value, type, removeable, addable }: TagProps) {
           <Plus color="white" size={14} strokeWidth={3} />
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 

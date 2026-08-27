@@ -52,6 +52,7 @@ const styles = StyleSheet.create({
   },
   tag: {
     fontSize: 10,
+    fontFamily: "UrbanistRegular",
   },
   defaultSemiBold: {
     fontSize: 16,
