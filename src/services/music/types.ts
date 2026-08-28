@@ -11,6 +11,14 @@ export type MusicTrack = {
   isrc?: string;
 };
 
+export const DefaultTrack: MusicTrack = {
+  provider: "spotify",
+  providerTrackId: "",
+  title: "None",
+  artist: "None",
+  artworkUrl: require("@/assets/images/no_album_cover.png"),
+};
+
 export type PlaybackState = {
   track: MusicTrack;
   isPlaying: boolean;

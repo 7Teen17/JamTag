@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
-import { MusicTrack } from "../services/music/types";
+import { DefaultTrack, MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
@@ -11,7 +11,7 @@ type RecentlyTaggedItemProps = {
 };
 
 export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
-  const [track, setTrack] = useState<MusicTrack | null>(null);
+  const [track, setTrack] = useState<MusicTrack>(DefaultTrack);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, musicService } = useSpotifyAuth();
   const { openSheet } = useBottomSheet();
@@ -25,7 +25,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     async function loadTrack() {
       setLoading(true);
       const returned_track: MusicTrack | null = await service.getTrack(id);
-      setTrack(returned_track);
+      setTrack(returned_track || DefaultTrack);
       setLoading(false);
     }
     loadTrack();
@@ -35,7 +35,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     <TouchableOpacity
       onPress={(event) => {
         if (track) {
-          openSheet(track.providerTrackId);
+          openSheet(track);
         }
       }}
       activeOpacity={0.5}

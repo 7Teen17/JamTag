@@ -35,7 +35,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
     <TouchableOpacity
       onPress={(event) => {
         if (track) {
-          openSheet(track.providerTrackId);
+          openSheet(track);
         }
       }}
       style={styles.container}

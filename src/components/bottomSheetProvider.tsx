@@ -20,12 +20,13 @@ import {
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getAllTags, getTagsFromSong } from "../db/db";
+import { DefaultTrack, MusicTrack } from "../services/music/types";
 import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
 type BottomSheetContextValue = {
-  openSheet: (trackId?: string) => void;
+  openSheet: (track: MusicTrack) => void;
   closeSheet: () => void;
 };
 
@@ -44,17 +45,17 @@ export function useBottomSheet() {
 export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
   const snapPoints = useMemo(() => ["50%", "80%"], []);
-  const [trackId, setTrackId] = useState<string | null>(null);
+  const [track, setTrack] = useState<MusicTrack>(DefaultTrack);
   const [tagSearch, setTagSearch] = useState("");
 
   const openSheet = useCallback(
-    async (providedTrackId?: string) => {
-      if (providedTrackId && providedTrackId !== trackId) {
-        setTrackId(providedTrackId);
+    async (providedTrack: MusicTrack) => {
+      if (providedTrack && providedTrack !== track) {
+        setTrack(providedTrack);
       }
       bottomSheetRef.current?.present();
     },
-    [trackId],
+    [track],
   );
 
   const closeSheet = useCallback(() => {
@@ -66,7 +67,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
     [openSheet, closeSheet],
   );
 
-  const tags = trackId != null ? getTagsFromSong(trackId) : [];
+  const tags = track != null ? getTagsFromSong(track) : [];
   const normalizedSearch = tagSearch.trim().toLowerCase();
   const suggestions = getAllTags().filter(
     (tag) =>
@@ -93,7 +94,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           <ThemedText type="title" style={styles.editTagsText}>
             Edit Tags
           </ThemedText>
-          <CurrentTaggingItem id={trackId ? trackId : ""}></CurrentTaggingItem>
+          <CurrentTaggingItem providedTrack={track}></CurrentTaggingItem>
           <View
             style={{
               height: 1,

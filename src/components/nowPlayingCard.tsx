@@ -98,7 +98,7 @@ export default function NowPlayingCard() {
             style={styles.tagButton}
             onPress={(event) => {
               if (playback) {
-                openSheet(playback.track.providerTrackId);
+                openSheet(playback.track);
               }
             }}
             activeOpacity={0.5}

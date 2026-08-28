@@ -1,32 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
-import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { MusicTrack } from "../services/music/types";
 import { ThemedText } from "./default/themed-text";
 
 type SearchedItemProps = {
-  id: string;
+  providedTrack: MusicTrack;
 };
 
-export default function CurrentTaggingItem({ id }: SearchedItemProps) {
-  const [track, setTrack] = useState<MusicTrack | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { isAuthenticated, musicService } = useSpotifyAuth();
-
-  useEffect(() => {
-    if (!isAuthenticated || !musicService) {
-      setLoading(false);
-      return;
-    }
-    const service = musicService;
-    async function loadTrack() {
-      setLoading(true);
-      const returned_track: MusicTrack | null = await service.getTrack(id);
-      setTrack(returned_track);
-      setLoading(false);
-    }
-    loadTrack();
-  }, [id, isAuthenticated, musicService]);
+export default function CurrentTaggingItem({
+  providedTrack,
+}: SearchedItemProps) {
+  const [track, setTrack] = useState<MusicTrack>(providedTrack);
 
   return (
     <View style={styles.container}>
@@ -45,7 +29,7 @@ export default function CurrentTaggingItem({ id }: SearchedItemProps) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {loading ? "Loading..." : track ? track.title : "Not found."}
+          {track.title}
         </ThemedText>
         <ThemedText
           type="smallText"
@@ -53,7 +37,7 @@ export default function CurrentTaggingItem({ id }: SearchedItemProps) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {loading ? "..." : track ? track.artist : "Not found."}
+          {track.artist}
         </ThemedText>
       </View>
     </View>
