@@ -19,7 +19,7 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { getAllTags, getTagsFromSong } from "../db/db";
+import { createTag, getAllTags, getTagsFromSong, setTag } from "../db/db";
 import { DefaultTrack, MusicTrack } from "../services/music/types";
 import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
@@ -47,26 +47,21 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const snapPoints = useMemo(() => ["50%", "80%"], []);
   const [track, setTrack] = useState<MusicTrack>(DefaultTrack);
   const [tagSearch, setTagSearch] = useState("");
-
-  const openSheet = useCallback(
-    async (providedTrack: MusicTrack) => {
-      if (providedTrack && providedTrack !== track) {
-        setTrack(providedTrack);
-      }
-      bottomSheetRef.current?.present();
-    },
-    [track],
-  );
+  const [update, setUpdate] = useState(0);
 
   const closeSheet = useCallback(() => {
     bottomSheetRef.current?.dismiss();
+  }, []);
+
+  const openSheet = useCallback((providedTrack: MusicTrack) => {
+    setTrack(providedTrack);
+    bottomSheetRef.current?.present();
   }, []);
 
   const contextValue = useMemo(
     () => ({ openSheet, closeSheet }),
     [openSheet, closeSheet],
   );
-
   const tags = track != null ? getTagsFromSong(track) : [];
   const normalizedSearch = tagSearch.trim().toLowerCase();
   const suggestions = getAllTags().filter(
@@ -86,7 +81,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
         enablePanDownToClose
         backgroundStyle={{ backgroundColor: "#202020" }}
         handleIndicatorStyle={{ backgroundColor: "#adadad" }}
-        footerComponent={Footer}
+        footerComponent={(props) => <Footer {...props} onSave={closeSheet} />}
         backdropComponent={Backdrop}
         onDismiss={() => setTagSearch("")}
       >
@@ -111,7 +106,16 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
             <ThemedText style={styles.tagsText}>TAGS</ThemedText>
             <View style={styles.tagContainer}>
               {tags.map((val, index) => (
-                <Tag key={index} value={val} type="large" removeable />
+                <Tag
+                  key={index}
+                  value={val}
+                  type="large"
+                  removeable
+                  onPress={() => {
+                    setTag(track, val, false);
+                    setUpdate(update + 1);
+                  }}
+                />
               ))}
               {tags.length == 0 && (
                 <View style={{ width: "100%" }}>
@@ -137,7 +141,9 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
             <BottomSheetTextInput
               style={styles.searchText}
               value={tagSearch}
-              onChangeText={setTagSearch}
+              onChangeText={(search) => {
+                setTagSearch(search);
+              }}
               placeholder="Search or Create Tags"
               placeholderTextColor="#8D8D8D"
             />
@@ -146,10 +152,28 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
             <View style={styles.tagContainer}>
               {suggestions.map((tag) => (
-                <Tag key={tag} type="large" value={tag} addable />
+                <Tag
+                  key={tag}
+                  type="large"
+                  value={tag}
+                  addable
+                  onPress={() => {
+                    setTag(track, tag, true);
+                    setTagSearch("");
+                  }}
+                />
               ))}
               {tagSearch.trim() && suggestions.length === 0 && (
-                <Tag type="large" value={`Create tag '${tagSearch}'`} addable />
+                <Tag
+                  type="large"
+                  value={`Create tag '${tagSearch}'`}
+                  addable
+                  onPress={() => {
+                    createTag(tagSearch);
+                    setTag(track, tagSearch, true);
+                    setTagSearch("");
+                  }}
+                />
               )}
             </View>
           </View>
@@ -159,7 +183,11 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   );
 }
 
-function Footer({ animatedFooterPosition }: BottomSheetFooterProps) {
+type FooterProps = BottomSheetFooterProps & {
+  onSave: () => void;
+};
+
+function Footer({ animatedFooterPosition, onSave }: FooterProps) {
   const { bottom: bottomSafeArea } = useSafeAreaInsets();
 
   return (
@@ -167,7 +195,7 @@ function Footer({ animatedFooterPosition }: BottomSheetFooterProps) {
       bottomInset={bottomSafeArea}
       animatedFooterPosition={animatedFooterPosition}
     >
-      <TouchableOpacity style={styles.saveButton}>
+      <TouchableOpacity style={styles.saveButton} onPress={onSave}>
         <ThemedText type="title">Save Tags</ThemedText>
       </TouchableOpacity>
     </BottomSheetFooter>

@@ -111,13 +111,16 @@ export function deleteTag(tag: string) {
 
 export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
   const normalizedTag = normalizeTag(tag);
-  const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
-    normalizedTag,
-  ]) as { id: number } | null;
+  const existingTag = db.getFirstSync(
+    "SELECT id FROM tags WHERE LOWER(name) = ?",
+    [normalizedTag],
+  ) as { id: number } | null;
+  console.log("finished the stufff");
 
   if (!existingTag) {
     return;
   }
+  console.log(`Found tag and it is ${existingTag}`);
 
   if (isEnabled) {
     cacheSong(song);
@@ -155,7 +158,7 @@ export function getAllTags() {
 }
 
 export function getSongsFromTag(tag: string) {
-  const tagRow = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
+  const tagRow = db.getFirstSync("SELECT id FROM tags WHERE LOWER(name) = ?", [
     normalizeTag(tag),
   ]) as { id: number } | null;
 
