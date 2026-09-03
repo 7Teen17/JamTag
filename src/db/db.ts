@@ -115,12 +115,10 @@ export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
     "SELECT id FROM tags WHERE LOWER(name) = ?",
     [normalizedTag],
   ) as { id: number } | null;
-  console.log("finished the stufff");
 
   if (!existingTag) {
     return;
   }
-  console.log(`Found tag and it is ${existingTag}`);
 
   if (isEnabled) {
     cacheSong(song);
