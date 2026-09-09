@@ -2,6 +2,7 @@ import type {
   MusicAuthSession,
   MusicProviderId,
   MusicTrack,
+  MusicTrackPage,
   PlaybackState,
 } from "./types";
 
@@ -24,6 +25,6 @@ export abstract class MusicService {
   }
 
   abstract getCurrentPlayback(): Promise<PlaybackState | null>;
-  abstract searchTracks(query: string): Promise<MusicTrack[]>;
+  abstract searchTracks(query: string, offset?: number): Promise<MusicTrackPage>;
   abstract getTrack(id: string): Promise<MusicTrack | null>;
 }

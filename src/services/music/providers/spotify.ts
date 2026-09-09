@@ -1,7 +1,7 @@
 import { getCachedSong } from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
-import type { MusicTrack, PlaybackState } from "../types";
+import type { MusicTrack, MusicTrackPage, PlaybackState } from "../types";
 
 export const SPOTIFY_DISCOVERY: DiscoveryDocument = {
   authorizationEndpoint: "https://accounts.spotify.com/authorize",
@@ -60,9 +60,9 @@ export class SpotifyMusicService extends MusicService {
     };
   }
 
-  async searchTracks(_query: string): Promise<MusicTrack[]> {
+  async searchTracks(_query: string, offset = 0): Promise<MusicTrackPage> {
     const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(_query)}&type=track`,
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(_query)}&type=track&limit=10&offset=${offset}`,
       {
         method: "GET",
         headers: this.getAuthorizationHeaders(),
@@ -70,15 +70,12 @@ export class SpotifyMusicService extends MusicService {
     );
 
     if (!response.ok || response.status === 204) {
-      console.warn(
-        `Error status ${response.status} and ${await response.text()}`,
-      );
-      return [];
+      throw new Error(`Spotify search failed (${response.status}).`);
     }
 
     const result = await response.json();
 
-    return result.tracks.items.map((i: any) => {
+    const items: MusicTrack[] = result.tracks.items.map((i: any) => {
       const song: MusicTrack = {
         provider: "spotify",
         providerTrackId: i.id,
@@ -91,6 +88,12 @@ export class SpotifyMusicService extends MusicService {
       };
       return song;
     });
+
+    const nextOffset = result.tracks.offset + result.tracks.limit;
+    return {
+      items,
+      nextOffset: result.tracks.next && nextOffset <= 1000 ? nextOffset : null,
+    };
   }
 
   async getTrack(_id: string): Promise<MusicTrack | null> {

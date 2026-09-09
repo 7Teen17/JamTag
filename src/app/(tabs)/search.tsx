@@ -1,33 +1,118 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import SearchedItem from "@/src/components/searchedItem";
+import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
+import type { MusicTrack } from "@/src/services/music/types";
 import { Search } from "lucide-react-native";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ActivityIndicator, FlatList, StyleSheet, TextInput, View } from "react-native";
 
 export default function SearchScreen() {
-  const test_songs = [
-    "0nbXyq5TXYPCO7pr3N8S4I",
-    "4XcZp2xqbiD8YsnPboNUDo",
-    "6CUP2khYzdphXebxVTfPE3",
-    "7EW7Yivb93qKAtp5qEm5of",
-    "45J4avUb9Ni0bnETYaYFVJ",
-  ];
+  const { musicService } = useSpotifyAuth();
+  const [query, setQuery] = useState("");
+  const [tracks, setTracks] = useState<MusicTrack[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const nextOffset = useRef<number | null>(null);
+  const generation = useRef(0);
+  const pending = useRef(false);
+
+  const loadPage = useCallback(async (offset: number, version: number) => {
+    if (!musicService || !query.trim() || pending.current) return;
+    pending.current = true;
+    setLoading(true);
+    setError(null);
+    try {
+      const page = await musicService.searchTracks(query.trim(), offset);
+      if (version !== generation.current) return;
+      setTracks((previous) => {
+        if (offset === 0) return page.items;
+        const ids = new Set(previous.map((track) => track.providerTrackId));
+        return [...previous, ...page.items.filter((track) => !ids.has(track.providerTrackId))];
+      });
+      nextOffset.current = page.nextOffset;
+    } catch (error) {
+      if (version === generation.current) {
+        setError(error instanceof Error ? error.message : "Search failed.");
+      }
+    } finally {
+      if (version === generation.current) {
+        pending.current = false;
+        setLoading(false);
+      }
+    }
+  }, [musicService, query]);
+
+  useEffect(() => {
+    const version = ++generation.current;
+    pending.current = false;
+    nextOffset.current = null;
+    const timeout = setTimeout(() => {
+      setTracks([]);
+      setError(null);
+      setLoading(false);
+      void loadPage(0, version);
+    }, 300);
+    return () => {
+      clearTimeout(timeout);
+      generation.current = version + 1;
+    };
+  }, [loadPage, musicService, query]);
 
   return (
-    <>
+    <View style={styles.container}>
       <View style={styles.searchBar}>
-        <Search style={styles.searchIcon}></Search>
-        <ThemedText style={styles.searchText}>
-          Search Songs, Artists, Albums
-        </ThemedText>
+        <Search style={styles.searchIcon} />
+        <TextInput
+          style={styles.searchText}
+          placeholder="Search Songs, Artists, Albums"
+          placeholderTextColor="#8D8D8D"
+          accessibilityLabel="Search songs"
+          value={query}
+          onChangeText={(text) => {
+            if (text === query) return;
+            generation.current++;
+            nextOffset.current = null;
+            setTracks([]);
+            setError(null);
+            setLoading(Boolean(musicService && text.trim()));
+            setQuery(text);
+          }}
+          autoCorrect={false}
+          returnKeyType="search"
+        />
       </View>
-      {test_songs.map((song) => (
-        <SearchedItem id={song} key={song}></SearchedItem>
-      ))}
-    </>
+      <FlatList
+        key={query}
+        data={tracks}
+        keyExtractor={(track) => track.providerTrackId}
+        renderItem={({ item }) => <SearchedItem id={item.providerTrackId} track={item} />}
+        keyboardShouldPersistTaps="handled"
+        onEndReached={() => {
+          if (!error && nextOffset.current !== null) {
+            void loadPage(nextOffset.current, generation.current);
+          }
+        }}
+        onEndReachedThreshold={0.2}
+        ListEmptyComponent={!loading && !error && query.trim() ? (
+          <ThemedText>{musicService ? "No songs found." : "Connect Spotify to search."}</ThemedText>
+        ) : null}
+        ListFooterComponent={loading ? <ActivityIndicator /> : error ? (
+          <ThemedText
+            accessibilityRole="button"
+            onPress={() => void loadPage(nextOffset.current ?? 0, generation.current)}
+          >
+            {error} Tap to retry.
+          </ThemedText>
+        ) : null}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   searchBar: {
     backgroundColor: "#272727",
     width: "auto",
@@ -47,8 +132,9 @@ const styles = StyleSheet.create({
     marginRight: 7,
   },
   searchText: {
+    flex: 1,
     fontFamily: "UrbanistRegular",
     fontSize: 14,
-    color: "#8D8D8D",
+    color: "white",
   },
 });

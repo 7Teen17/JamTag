@@ -11,6 +11,11 @@ export type MusicTrack = {
   isrc?: string;
 };
 
+export type MusicTrackPage = {
+  items: MusicTrack[];
+  nextOffset: number | null;
+};
+
 export const DefaultTrack: MusicTrack = {
   provider: "spotify",
   providerTrackId: "",

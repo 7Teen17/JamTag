@@ -8,28 +8,31 @@ import Tag from "./tag";
 
 type SearchedItemProps = {
   id: string;
+  track?: MusicTrack;
 };
 
-export default function SearchedItem({ id }: SearchedItemProps) {
-  const [track, setTrack] = useState<MusicTrack | null>(null);
-  const [loading, setLoading] = useState(true);
+export default function SearchedItem({ id, track: searchTrack }: SearchedItemProps) {
+  const [loadedTrack, setTrack] = useState<MusicTrack | null>(null);
+  const [loading, setLoading] = useState(!searchTrack);
   const { isAuthenticated, musicService } = useSpotifyAuth();
   const { openSheet } = useBottomSheet();
 
+  const track = searchTrack ?? loadedTrack;
+
   useEffect(() => {
-    if (!isAuthenticated || !musicService) {
-      setLoading(false);
-      return;
-    }
-    const service = musicService;
+    if (searchTrack) return;
     async function loadTrack() {
+      if (!isAuthenticated || !musicService) {
+        setLoading(false);
+        return;
+      }
       setLoading(true);
-      const returned_track: MusicTrack | null = await service.getTrack(id);
+      const returned_track: MusicTrack | null = await musicService.getTrack(id);
       setTrack(returned_track);
       setLoading(false);
     }
     loadTrack();
-  }, [id, isAuthenticated, musicService]);
+  }, [id, isAuthenticated, musicService, searchTrack]);
 
   return (
     <TouchableOpacity
@@ -55,7 +58,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {loading ? "Loading..." : track ? track.title : "Not found."}
+          {!searchTrack && loading ? "Loading..." : track ? track.title : "Not found."}
         </ThemedText>
         <ThemedText
           type="smallText"
@@ -63,7 +66,7 @@ export default function SearchedItem({ id }: SearchedItemProps) {
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {loading ? "..." : track ? track.artist : "Not found."}
+          {!searchTrack && loading ? "..." : track ? track.artist : "Not found."}
         </ThemedText>
         <Tag value="Cool"></Tag>
       </View>
