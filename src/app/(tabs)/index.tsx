@@ -3,7 +3,7 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
 import { useRouter } from "expo-router";
-import { Button, ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -30,12 +30,6 @@ export default function HomeScreen() {
           return <RecentlyTaggedItem key={song} id={song}></RecentlyTaggedItem>;
         })}
       </ScrollView>
-      <Button
-        onPress={() => {
-          router.push("/login");
-        }}
-        title="Go to Login"
-      ></Button>
 
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
