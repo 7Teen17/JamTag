@@ -61,7 +61,36 @@ export class SpotifyMusicService extends MusicService {
   }
 
   async searchTracks(_query: string): Promise<MusicTrack[]> {
-    throw new Error("Spotify searchTracks is not implemented yet.");
+    const response = await fetch(
+      `https://api.spotify.com/v1/search?q=${encodeURIComponent(_query)}&type=track`,
+      {
+        method: "GET",
+        headers: this.getAuthorizationHeaders(),
+      },
+    );
+
+    if (!response.ok || response.status === 204) {
+      console.warn(
+        `Error status ${response.status} and ${await response.text()}`,
+      );
+      return [];
+    }
+
+    const result = await response.json();
+
+    return result.tracks.items.map((i: any) => {
+      const song: MusicTrack = {
+        provider: "spotify",
+        providerTrackId: i.id,
+        title: i.name,
+        artist: i.artists.map((artist: any) => artist.name).join(", "),
+        album: i.album.name,
+        artworkUrl: i.album.images?.[0]?.url,
+        durationMs: i.duration_ms,
+        isrc: i.external_ids?.isrc,
+      };
+      return song;
+    });
   }
 
   async getTrack(_id: string): Promise<MusicTrack | null> {
