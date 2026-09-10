@@ -96,6 +96,11 @@ export default function SearchScreen() {
       <FlatList
         key={query}
         data={tracks}
+        contentContainerStyle={
+          !loading && !error && tracks.length === 0
+            ? styles.emptyListContent
+            : undefined
+        }
         keyExtractor={(track) => track.providerTrackId}
         renderItem={({ item }) => (
           <SearchedItem id={item.providerTrackId} track={item} />
@@ -108,10 +113,13 @@ export default function SearchScreen() {
         }}
         onEndReachedThreshold={0.2}
         ListEmptyComponent={
-          !loading && !error && query.trim() ? (
-            <ThemedText>
-              {musicService ? "No songs found." : "Connect Spotify to search."}
-            </ThemedText>
+          !loading && !error ? (
+            <View style={styles.emptyState}>
+              <Search size={48} color="#8D8D8D" strokeWidth={1.5} />
+              <ThemedText style={styles.emptyStateText}>
+                Search for Songs
+              </ThemedText>
+            </View>
           ) : null
         }
         ListFooterComponent={
@@ -160,5 +168,19 @@ const styles = StyleSheet.create({
     fontFamily: "UrbanistRegular",
     fontSize: 14,
     color: "white",
+  },
+  emptyListContent: {
+    flexGrow: 1,
+  },
+  emptyState: {
+    alignItems: "center",
+    flex: 1,
+    justifyContent: "center",
+  },
+  emptyStateText: {
+    color: "#8D8D8D",
+    fontFamily: "UrbanistRegular",
+    fontSize: 18,
+    marginTop: 12,
   },
 });
