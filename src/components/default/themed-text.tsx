@@ -47,7 +47,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   smallText: {
-    fontSize: 10,
+    fontSize: 11,
     color: "#B2B2B2",
   },
   tag: {

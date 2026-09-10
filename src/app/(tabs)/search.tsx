@@ -4,7 +4,13 @@ import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { MusicTrack } from "@/src/services/music/types";
 import { Search } from "lucide-react-native";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, TextInput, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  TextInput,
+  View,
+} from "react-native";
 
 export default function SearchScreen() {
   const { musicService } = useSpotifyAuth();
@@ -16,31 +22,37 @@ export default function SearchScreen() {
   const generation = useRef(0);
   const pending = useRef(false);
 
-  const loadPage = useCallback(async (offset: number, version: number) => {
-    if (!musicService || !query.trim() || pending.current) return;
-    pending.current = true;
-    setLoading(true);
-    setError(null);
-    try {
-      const page = await musicService.searchTracks(query.trim(), offset);
-      if (version !== generation.current) return;
-      setTracks((previous) => {
-        if (offset === 0) return page.items;
-        const ids = new Set(previous.map((track) => track.providerTrackId));
-        return [...previous, ...page.items.filter((track) => !ids.has(track.providerTrackId))];
-      });
-      nextOffset.current = page.nextOffset;
-    } catch (error) {
-      if (version === generation.current) {
-        setError(error instanceof Error ? error.message : "Search failed.");
+  const loadPage = useCallback(
+    async (offset: number, version: number) => {
+      if (!musicService || !query.trim() || pending.current) return;
+      pending.current = true;
+      setLoading(true);
+      setError(null);
+      try {
+        const page = await musicService.searchTracks(query.trim(), offset);
+        if (version !== generation.current) return;
+        setTracks((previous) => {
+          if (offset === 0) return page.items;
+          const ids = new Set(previous.map((track) => track.providerTrackId));
+          return [
+            ...previous,
+            ...page.items.filter((track) => !ids.has(track.providerTrackId)),
+          ];
+        });
+        nextOffset.current = page.nextOffset;
+      } catch (error) {
+        if (version === generation.current) {
+          setError(error instanceof Error ? error.message : "Search failed.");
+        }
+      } finally {
+        if (version === generation.current) {
+          pending.current = false;
+          setLoading(false);
+        }
       }
-    } finally {
-      if (version === generation.current) {
-        pending.current = false;
-        setLoading(false);
-      }
-    }
-  }, [musicService, query]);
+    },
+    [musicService, query],
+  );
 
   useEffect(() => {
     const version = ++generation.current;
@@ -85,7 +97,9 @@ export default function SearchScreen() {
         key={query}
         data={tracks}
         keyExtractor={(track) => track.providerTrackId}
-        renderItem={({ item }) => <SearchedItem id={item.providerTrackId} track={item} />}
+        renderItem={({ item }) => (
+          <SearchedItem id={item.providerTrackId} track={item} />
+        )}
         keyboardShouldPersistTaps="handled"
         onEndReached={() => {
           if (!error && nextOffset.current !== null) {
@@ -93,17 +107,27 @@ export default function SearchScreen() {
           }
         }}
         onEndReachedThreshold={0.2}
-        ListEmptyComponent={!loading && !error && query.trim() ? (
-          <ThemedText>{musicService ? "No songs found." : "Connect Spotify to search."}</ThemedText>
-        ) : null}
-        ListFooterComponent={loading ? <ActivityIndicator /> : error ? (
-          <ThemedText
-            accessibilityRole="button"
-            onPress={() => void loadPage(nextOffset.current ?? 0, generation.current)}
-          >
-            {error} Tap to retry.
-          </ThemedText>
-        ) : null}
+        ListEmptyComponent={
+          !loading && !error && query.trim() ? (
+            <ThemedText>
+              {musicService ? "No songs found." : "Connect Spotify to search."}
+            </ThemedText>
+          ) : null
+        }
+        ListFooterComponent={
+          loading ? (
+            <ActivityIndicator />
+          ) : error ? (
+            <ThemedText
+              accessibilityRole="button"
+              onPress={() =>
+                void loadPage(nextOffset.current ?? 0, generation.current)
+              }
+            >
+              {error} Tap to retry.
+            </ThemedText>
+          ) : null
+        }
       />
     </View>
   );

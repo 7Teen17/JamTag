@@ -11,7 +11,10 @@ type SearchedItemProps = {
   track?: MusicTrack;
 };
 
-export default function SearchedItem({ id, track: searchTrack }: SearchedItemProps) {
+export default function SearchedItem({
+  id,
+  track: searchTrack,
+}: SearchedItemProps) {
   const [loadedTrack, setTrack] = useState<MusicTrack | null>(null);
   const [loading, setLoading] = useState(!searchTrack);
   const { isAuthenticated, musicService } = useSpotifyAuth();
@@ -58,17 +61,27 @@ export default function SearchedItem({ id, track: searchTrack }: SearchedItemPro
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {!searchTrack && loading ? "Loading..." : track ? track.title : "Not found."}
+          {!searchTrack && loading
+            ? "Loading..."
+            : track
+              ? track.title
+              : "Not found."}
         </ThemedText>
-        <ThemedText
-          type="smallText"
-          style={styles.artistText}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {!searchTrack && loading ? "..." : track ? track.artist : "Not found."}
-        </ThemedText>
-        <Tag value="Cool"></Tag>
+        <View style={styles.artistRow}>
+          <ThemedText
+            type="smallText"
+            style={styles.artistText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {!searchTrack && loading
+              ? "..."
+              : track
+                ? track.artist
+                : "Not found."}
+          </ThemedText>
+          {track?.isExplicit && <Tag type="explicit" value="E"></Tag>}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -94,7 +107,13 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   artistText: {
+    flexShrink: 1,
     marginBottom: 3,
+  },
+  artistRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
   },
   infoView: {
     flex: 1,

@@ -87,9 +87,17 @@ export default function NowPlayingCard() {
           <ThemedText type="title" numberOfLines={1} ellipsizeMode="tail">
             {playback ? playback.track.title : "None"}
           </ThemedText>
-          <ThemedText type="default" numberOfLines={1} ellipsizeMode="tail">
-            {playback ? playback.track.artist : "None"}
-          </ThemedText>
+          <View style={styles.artistRow}>
+            <ThemedText
+              type="default"
+              style={styles.artistText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {playback ? playback.track.artist : "None"}
+            </ThemedText>
+            {playback?.track.isExplicit && <Tag type="explicit" value="E"></Tag>}
+          </View>
           <View style={styles.tagRow}>
             <Tag value="Cool"></Tag>
             <Tag value="Cool"></Tag>
@@ -149,6 +157,15 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "flex-end",
     paddingTop: 15,
+  },
+  artistRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+    maxWidth: "100%",
+  },
+  artistText: {
+    flexShrink: 1,
   },
   tagRow: {
     display: "flex",

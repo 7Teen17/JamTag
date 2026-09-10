@@ -59,9 +59,17 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
           >
             {loading ? "Loading..." : track ? track.title : "Not found."}
           </ThemedText>
-          <ThemedText type="smallText" numberOfLines={1} ellipsizeMode="tail">
-            {loading ? "..." : track ? track.artist : "Not found."}
-          </ThemedText>
+          <View style={styles.artistRow}>
+            <ThemedText
+              type="smallText"
+              style={styles.artistText}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {loading ? "..." : track ? track.artist : "Not found."}
+            </ThemedText>
+            {track.isExplicit && <Tag type="explicit" value="E"></Tag>}
+          </View>
           <View style={styles.tagRow}>
             <Tag value="Cool"></Tag>
             <Tag value="Cool"></Tag>
@@ -92,6 +100,14 @@ const styles = StyleSheet.create({
   },
   title: {
     paddingTop: 5,
+  },
+  artistRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
+  },
+  artistText: {
+    flexShrink: 1,
   },
   tagRow: {
     display: "flex",

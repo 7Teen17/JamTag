@@ -51,6 +51,7 @@ export class SpotifyMusicService extends MusicService {
       artworkUrl: result.item.album.images?.[0]?.url,
       durationMs: result.item.duration_ms,
       isrc: result.item.external_ids?.isrc,
+      isExplicit: result.item.explicit,
     };
 
     return {
@@ -75,19 +76,31 @@ export class SpotifyMusicService extends MusicService {
 
     const result = await response.json();
 
-    const items: MusicTrack[] = result.tracks.items.map((i: any) => {
-      const song: MusicTrack = {
-        provider: "spotify",
-        providerTrackId: i.id,
-        title: i.name,
-        artist: i.artists.map((artist: any) => artist.name).join(", "),
-        album: i.album.name,
-        artworkUrl: i.album.images?.[0]?.url,
-        durationMs: i.duration_ms,
-        isrc: i.external_ids?.isrc,
-      };
-      return song;
-    });
+    const seen = new Set<string>();
+
+    const items: MusicTrack[] = result.tracks.items
+      .map((i: any) => {
+        const song: MusicTrack = {
+          provider: "spotify",
+          providerTrackId: i.id,
+          title: i.name,
+          artist: i.artists.map((artist: any) => artist.name).join(", "),
+          album: i.album.name,
+          artworkUrl: i.album.images?.[0]?.url,
+          durationMs: i.duration_ms,
+          isrc: i.external_ids?.isrc,
+          isExplicit: i.explicit,
+        };
+        //songs with duplicate ISRCS get overwritten by the cached one, consolidating the tags into one track object
+        return getCachedSong(song.providerTrackId, song.isrc) ?? song;
+      })
+      .filter((track: MusicTrack) => {
+        const identity = track.isrc ?? track.providerTrackId;
+
+        if (seen.has(identity)) return false;
+        seen.add(identity);
+        return true;
+      });
 
     const nextOffset = result.tracks.offset + result.tracks.limit;
     return {
@@ -123,9 +136,10 @@ export class SpotifyMusicService extends MusicService {
       artworkUrl: result.album.images?.[0]?.url,
       durationMs: result.duration_ms,
       isrc: result.external_ids?.isrc,
+      isExplicit: result.explicit,
     };
-
-    return song;
+    //After the current track wasnt cached, get from Spotify and then check if it has same ISRC as cached song
+    return getCachedSong(_id, song.isrc) ?? song;
   }
 
   protected getAuthorizationHeaders() {

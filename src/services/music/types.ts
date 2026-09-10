@@ -9,6 +9,7 @@ export type MusicTrack = {
   artworkUrl?: string;
   durationMs?: number;
   isrc?: string;
+  isExplicit: boolean;
 };
 
 export type MusicTrackPage = {
@@ -22,6 +23,7 @@ export const DefaultTrack: MusicTrack = {
   title: "None",
   artist: "None",
   artworkUrl: require("@/assets/images/no_album_cover.png"),
+  isExplicit: false,
 };
 
 export type PlaybackState = {

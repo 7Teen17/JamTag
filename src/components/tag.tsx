@@ -4,7 +4,7 @@ import { ThemedText } from "./default/themed-text";
 
 type TagProps = {
   value: string;
-  type?: "regular" | "large";
+  type?: "regular" | "large" | "explicit";
   removeable?: boolean;
   addable?: boolean;
   onPress?: () => void;
@@ -18,12 +18,20 @@ export default function Tag({
   onPress,
 }: TagProps) {
   const isLarge = type ? type === "large" : false;
+  const isExplicit = type === "explicit";
   return (
     <Pressable
-      style={[styles.container, addable && styles.addableContainer]}
+      style={[
+        styles.container,
+        isExplicit && styles.explicitContainer,
+        addable && styles.addableContainer,
+      ]}
       onPress={onPress}
     >
-      <ThemedText type="tag" style={isLarge ? styles.largeText : styles.text}>
+      <ThemedText
+        type="tag"
+        style={isLarge ? styles.largeText : isExplicit ? styles.explicitText : styles.text}
+      >
         {value}
       </ThemedText>
       {removeable && (
@@ -56,6 +64,10 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderColor: "white",
   },
+  explicitContainer: {
+    backgroundColor: "#777777",
+    borderRadius: 3,
+  },
   text: {
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -65,5 +77,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     paddingLeft: 10,
     paddingVertical: 4,
+  },
+  explicitText: {
+    color: "white",
+    fontSize: 10,
+    fontFamily: "UrbanistBold",
+    paddingHorizontal: 4,
+    paddingVertical: 1,
   },
 });

@@ -25,7 +25,8 @@ export function setupDB() {
       album TEXT,
       artwork_url TEXT,
       durationMs INTEGER,
-      isrc TEXT
+      isrc TEXT,
+      is_explicit INTEGER NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS tags (
@@ -46,8 +47,8 @@ export function setupDB() {
 export function cacheSong(song: MusicTrack) {
   db.runSync(
     `
-      INSERT INTO songs (id, provider, title, artist, album, artwork_url, durationMs, isrc)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO songs (id, provider, title, artist, album, artwork_url, durationMs, isrc, is_explicit)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         provider = excluded.provider,
         title = excluded.title,
@@ -55,7 +56,8 @@ export function cacheSong(song: MusicTrack) {
         album = excluded.album,
         artwork_url = excluded.artwork_url,
         durationMs = excluded.durationMs,
-        isrc = excluded.isrc
+        isrc = excluded.isrc,
+        is_explicit = excluded.is_explicit
     `,
     [
       song.providerTrackId,
@@ -66,12 +68,16 @@ export function cacheSong(song: MusicTrack) {
       song.artworkUrl ?? null,
       song.durationMs ?? null,
       song.isrc ?? null,
+      Number(song.isExplicit),
     ],
   );
 }
 
-export function getCachedSong(providerTrackId: string): MusicTrack | null {
-  return db.getFirstSync<MusicTrack>(
+export function getCachedSong(
+  providerTrackId: string,
+  isrc?: string,
+): MusicTrack | null {
+  const song = db.getFirstSync<MusicTrack>(
     `
       SELECT
         id AS providerTrackId,
@@ -81,12 +87,42 @@ export function getCachedSong(providerTrackId: string): MusicTrack | null {
         album,
         artwork_url AS artworkUrl,
         durationMs,
-        isrc
+        isrc,
+        is_explicit AS isExplicit
       FROM songs
       WHERE id = ?
     `,
     [providerTrackId],
   );
+  if (song) {
+    return { ...song, isExplicit: Boolean(song.isExplicit) };
+  }
+
+  if (!isrc) {
+    return null;
+  }
+
+  const songWithMatchingIsrc = db.getFirstSync<MusicTrack>(
+    `
+      SELECT
+        id AS providerTrackId,
+        provider,
+        title,
+        artist,
+        album,
+        artwork_url AS artworkUrl,
+        durationMs,
+        isrc,
+        is_explicit AS isExplicit
+      FROM songs
+      WHERE isrc = ?
+    `,
+    [isrc],
+  );
+
+  return songWithMatchingIsrc
+    ? { ...songWithMatchingIsrc, isExplicit: Boolean(songWithMatchingIsrc.isExplicit) }
+    : null;
 }
 
 export function createTag(tag: string) {
@@ -164,13 +200,18 @@ export function getSongsFromTag(tag: string) {
     return [];
   }
 
-  return db.getAllSync(
+  const songs = db.getAllSync(
     `
-        SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album, s.artwork_url AS artworkUrl, s.durationMs, s.isrc
+        SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album, s.artwork_url AS artworkUrl, s.durationMs, s.isrc, s.is_explicit AS isExplicit
         FROM song_tags AS st
         JOIN songs AS s ON s.id = st.song_id
         WHERE st.tag_id = ?
       `,
     [tagRow.id],
   ) as MusicTrack[];
+
+  return songs.map((song) => ({
+    ...song,
+    isExplicit: Boolean(song.isExplicit),
+  }));
 }

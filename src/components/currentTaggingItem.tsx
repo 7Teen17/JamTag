@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
 import { MusicTrack } from "../services/music/types";
 import { ThemedText } from "./default/themed-text";
+import Tag from "./tag";
 
 type SearchedItemProps = {
   providedTrack: MusicTrack;
@@ -31,14 +32,17 @@ export default function CurrentTaggingItem({
         >
           {track.title}
         </ThemedText>
-        <ThemedText
-          type="smallText"
-          style={styles.artistText}
-          numberOfLines={1}
-          ellipsizeMode="tail"
-        >
-          {track.artist}
-        </ThemedText>
+        <View style={styles.artistRow}>
+          <ThemedText
+            type="smallText"
+            style={styles.artistText}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
+            {track.artist}
+          </ThemedText>
+          {track.isExplicit && <Tag type="explicit" value="E"></Tag>}
+        </View>
       </View>
     </View>
   );
@@ -64,7 +68,13 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   artistText: {
+    flexShrink: 1,
     marginBottom: 3,
+  },
+  artistRow: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 4,
   },
   infoView: {
     flex: 1,
