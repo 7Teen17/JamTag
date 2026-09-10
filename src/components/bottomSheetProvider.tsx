@@ -160,6 +160,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   onPress={() => {
                     setTag(track, tag, true);
                     setTagSearch("");
+                    setUpdate(update + 1);
                   }}
                 />
               ))}
