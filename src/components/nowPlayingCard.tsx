@@ -5,7 +5,7 @@ import type { PlaybackState } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { getTagsFromSong } from "../db/db";
+import { useSongTags } from "../hooks/useSongTags";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 const SONG_END_REFRESH_BUFFER_MS = 3000;
@@ -80,7 +80,7 @@ export default function NowPlayingCard() {
   }, [isAuthenticated, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = playback ? getTagsFromSong(playback.track) : [];
+  const tags = useSongTags(playback?.track.providerTrackId);
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 5);
 
   return (

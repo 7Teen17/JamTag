@@ -5,7 +5,7 @@ import { DefaultTrack, MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { getTagsFromSong } from "../db/db";
+import { useSongTags } from "../hooks/useSongTags";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type RecentlyTaggedItemProps = {
@@ -34,7 +34,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
   }, [id, isAuthenticated, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = loading ? [] : getTagsFromSong(track);
+  const tags = useSongTags(loading ? "" : track.providerTrackId);
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
   return (

@@ -3,6 +3,39 @@ import { MusicTrack } from "../services/music/types";
 
 const db = SQLite.openDatabaseSync("music.db");
 
+const songTagSnapshots = new Map<string, string[]>();
+const songTagListeners = new Map<string, Set<() => void>>();
+const emptyTags: string[] = [];
+
+export function subscribeSongTags(songId: string, listener: () => void) {
+  let listeners = songTagListeners.get(songId);
+  if (!listeners) {
+    listeners = new Set();
+    songTagListeners.set(songId, listeners);
+  }
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) songTagListeners.delete(songId);
+  };
+}
+
+export function getSongTagsSnapshot(songId: string) {
+  if (!songId) return emptyTags;
+  // React needs the same array reference until this song's tags change.
+  let tags = songTagSnapshots.get(songId);
+  if (!tags) {
+    tags = getTagsFromSong({ providerTrackId: songId });
+    songTagSnapshots.set(songId, tags);
+  }
+  return tags;
+}
+
+function notifySongTagsChanged(songId: string) {
+  songTagSnapshots.delete(songId);
+  songTagListeners.get(songId)?.forEach((listener) => listener());
+}
+
 function normalizeTag(tag: string) {
   const normalizedTag = tag.trim().toLowerCase();
 
@@ -142,7 +175,14 @@ export function createTag(tag: string) {
 }
 
 export function deleteTag(tag: string) {
-  db.runSync("DELETE FROM tags WHERE name = ?", [normalizeTag(tag)]);
+  const normalizedTag = normalizeTag(tag);
+  const songs = db.getAllSync<{ song_id: string }>(
+    `SELECT st.song_id FROM song_tags st
+     JOIN tags t ON t.id = st.tag_id WHERE t.name = ?`,
+    [normalizedTag],
+  );
+  db.runSync("DELETE FROM tags WHERE name = ?", [normalizedTag]);
+  songs.forEach(({ song_id }) => notifySongTagsChanged(song_id));
 }
 
 export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
@@ -159,19 +199,21 @@ export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
   if (isEnabled) {
     cacheSong(song);
 
-    db.runSync(
+    const result = db.runSync(
       "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
       [song.providerTrackId, existingTag.id],
     );
+    if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
   } else {
-    db.runSync("DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?", [
+    const result = db.runSync("DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?", [
       song.providerTrackId,
       existingTag.id,
     ]);
+    if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
   }
 }
 
-export function getTagsFromSong(providerTrack: MusicTrack) {
+export function getTagsFromSong(providerTrack: Pick<MusicTrack, "providerTrackId">) {
   return (
     db.getAllSync(
       `

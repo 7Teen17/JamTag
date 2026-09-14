@@ -19,14 +19,14 @@ import {
 } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { createTag, getAllTags, getTagsFromSong, setTag } from "../db/db";
+import { createTag, getAllTags, setTag } from "../db/db";
 import { DefaultTrack, MusicTrack } from "../services/music/types";
+import { useSongTags } from "../hooks/useSongTags";
 import CurrentTaggingItem from "./currentTaggingItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
 type BottomSheetContextValue = {
-  tagRevision: number;
   openSheet: (track: MusicTrack) => void;
   closeSheet: () => void;
 };
@@ -48,7 +48,6 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const snapPoints = useMemo(() => ["50%", "80%"], []);
   const [track, setTrack] = useState<MusicTrack>(DefaultTrack);
   const [tagSearch, setTagSearch] = useState("");
-  const [update, setUpdate] = useState(0);
 
   const closeSheet = useCallback(() => {
     bottomSheetRef.current?.dismiss();
@@ -60,10 +59,10 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   }, []);
 
   const contextValue = useMemo(
-    () => ({ openSheet, closeSheet, tagRevision: update }),
-    [openSheet, closeSheet, update],
+    () => ({ openSheet, closeSheet }),
+    [openSheet, closeSheet],
   );
-  const tags = track != null ? getTagsFromSong(track) : [];
+  const tags = useSongTags(track.providerTrackId);
   const normalizedSearch = tagSearch.trim().toLowerCase();
   const suggestions = getAllTags().filter(
     (tag) =>
@@ -114,7 +113,6 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   removeable
                   onPress={() => {
                     setTag(track, val, false);
-                    setUpdate((value) => value + 1);
                   }}
                 />
               ))}
@@ -161,7 +159,6 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   onPress={() => {
                     setTag(track, tag, true);
                     setTagSearch("");
-                    setUpdate((value) => value + 1);
                   }}
                 />
               ))}
@@ -173,7 +170,6 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   onPress={() => {
                     createTag(tagSearch);
                     setTag(track, tagSearch, true);
-                    setUpdate((value) => value + 1);
                     setTagSearch("");
                   }}
                 />

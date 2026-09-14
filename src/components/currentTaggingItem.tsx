@@ -3,7 +3,7 @@ import { Image, StyleSheet, View } from "react-native";
 import { MusicTrack } from "../services/music/types";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { getTagsFromSong } from "../db/db";
+import { useSongTags } from "../hooks/useSongTags";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type SearchedItemProps = {
@@ -16,7 +16,7 @@ export default function CurrentTaggingItem({
   const track = providedTrack;
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = getTagsFromSong(track);
+  const tags = useSongTags(track.providerTrackId);
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
   return (

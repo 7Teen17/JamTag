@@ -5,7 +5,7 @@ import { MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { getTagsFromSong } from "../db/db";
+import { useSongTags } from "../hooks/useSongTags";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type SearchedItemProps = {
@@ -40,7 +40,7 @@ export default function SearchedItem({
   }, [id, isAuthenticated, musicService, searchTrack]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = track && (searchTrack || !loading) ? getTagsFromSong(track) : [];
+  const tags = useSongTags(searchTrack || !loading ? track?.providerTrackId : "");
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
   return (
