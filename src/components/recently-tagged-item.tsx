@@ -5,6 +5,8 @@ import { DefaultTrack, MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
+import { getTagsFromSong } from "../db/db";
+import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type RecentlyTaggedItemProps = {
   id: string;
@@ -30,6 +32,10 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     }
     loadTrack();
   }, [id, isAuthenticated, musicService]);
+
+  const [tagRowWidth, setTagRowWidth] = useState(0);
+  const tags = loading ? [] : getTagsFromSong(track);
+  const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
   return (
     <TouchableOpacity
@@ -70,10 +76,18 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
             </ThemedText>
             {track.isExplicit && <Tag type="explicit" value="E"></Tag>}
           </View>
-          <View style={styles.tagRow}>
-            <Tag value="Cool"></Tag>
-            <Tag value="Cool"></Tag>
-            <ThemedText type="smallText">+17</ThemedText>
+          <View
+            style={styles.tagRow}
+            onLayout={(event) => setTagRowWidth(event.nativeEvent.layout.width)}
+          >
+            {tags.slice(0, visibleTagCount).map((tag) => (
+              <Tag key={tag} value={tag} />
+            ))}
+            {tagRowWidth > 0 && visibleTagCount < tags.length && (
+              <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>
+                +{tags.length - visibleTagCount}
+              </ThemedText>
+            )}
           </View>
         </View>
       </View>
@@ -110,6 +124,8 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tagRow: {
+    width: "100%",
+    overflow: "hidden",
     display: "flex",
     flexDirection: "row",
     gap: 4,

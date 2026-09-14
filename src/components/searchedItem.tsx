@@ -5,6 +5,8 @@ import { MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
+import { getTagsFromSong } from "../db/db";
+import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type SearchedItemProps = {
   id: string;
@@ -36,6 +38,10 @@ export default function SearchedItem({
     }
     loadTrack();
   }, [id, isAuthenticated, musicService, searchTrack]);
+
+  const [tagRowWidth, setTagRowWidth] = useState(0);
+  const tags = track && (searchTrack || !loading) ? getTagsFromSong(track) : [];
+  const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
   return (
     <TouchableOpacity
@@ -82,6 +88,19 @@ export default function SearchedItem({
           </ThemedText>
           {track?.isExplicit && <Tag type="explicit" value="E"></Tag>}
         </View>
+        <View
+          style={styles.tagRow}
+          onLayout={(event) => setTagRowWidth(event.nativeEvent.layout.width)}
+        >
+          {tags.slice(0, visibleTagCount).map((tag) => (
+            <Tag key={tag} value={tag} />
+          ))}
+          {tagRowWidth > 0 && visibleTagCount < tags.length && (
+            <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>
+              +{tags.length - visibleTagCount}
+            </ThemedText>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -117,6 +136,14 @@ const styles = StyleSheet.create({
   },
   infoView: {
     flex: 1,
+    minWidth: 0,
+  },
+  tagRow: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    overflow: "hidden",
+    gap: 4,
   },
   tagButton: {
     width: 80,

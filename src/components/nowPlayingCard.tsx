@@ -5,6 +5,8 @@ import type { PlaybackState } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
+import { getTagsFromSong } from "../db/db";
+import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 const SONG_END_REFRESH_BUFFER_MS = 3000;
 const MAX_PLAYING_REFRESH_MS = 15000;
@@ -77,6 +79,10 @@ export default function NowPlayingCard() {
     };
   }, [isAuthenticated, musicService]);
 
+  const [tagRowWidth, setTagRowWidth] = useState(0);
+  const tags = playback ? getTagsFromSong(playback.track) : [];
+  const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 5);
+
   return (
     <View style={styles.card}>
       <ThemedText type="smallText" style={styles.nowPlayingText}>
@@ -98,9 +104,18 @@ export default function NowPlayingCard() {
             </ThemedText>
             {playback?.track.isExplicit && <Tag type="explicit" value="E"></Tag>}
           </View>
-          <View style={styles.tagRow}>
-            <Tag value="Cool"></Tag>
-            <Tag value="Cool"></Tag>
+          <View
+            style={styles.tagRow}
+            onLayout={(event) => setTagRowWidth(event.nativeEvent.layout.width)}
+          >
+            {tags.slice(0, visibleTagCount).map((tag) => (
+              <Tag key={tag} value={tag} />
+            ))}
+            {tagRowWidth > 0 && visibleTagCount < tags.length && (
+              <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>
+                +{tags.length - visibleTagCount}
+              </ThemedText>
+            )}
           </View>
           <TouchableOpacity
             style={styles.tagButton}
@@ -168,6 +183,10 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   tagRow: {
+    width: "100%",
+    overflow: "hidden",
+    justifyContent: "flex-end",
+    alignItems: "center",
     display: "flex",
     flexDirection: "row",
     marginTop: 5,

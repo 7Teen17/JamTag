@@ -26,6 +26,7 @@ import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
 type BottomSheetContextValue = {
+  tagRevision: number;
   openSheet: (track: MusicTrack) => void;
   closeSheet: () => void;
 };
@@ -59,8 +60,8 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
   }, []);
 
   const contextValue = useMemo(
-    () => ({ openSheet, closeSheet }),
-    [openSheet, closeSheet],
+    () => ({ openSheet, closeSheet, tagRevision: update }),
+    [openSheet, closeSheet, update],
   );
   const tags = track != null ? getTagsFromSong(track) : [];
   const normalizedSearch = tagSearch.trim().toLowerCase();
@@ -113,7 +114,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   removeable
                   onPress={() => {
                     setTag(track, val, false);
-                    setUpdate(update + 1);
+                    setUpdate((value) => value + 1);
                   }}
                 />
               ))}
@@ -160,7 +161,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   onPress={() => {
                     setTag(track, tag, true);
                     setTagSearch("");
-                    setUpdate(update + 1);
+                    setUpdate((value) => value + 1);
                   }}
                 />
               ))}
@@ -172,6 +173,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   onPress={() => {
                     createTag(tagSearch);
                     setTag(track, tagSearch, true);
+                    setUpdate((value) => value + 1);
                     setTagSearch("");
                   }}
                 />
