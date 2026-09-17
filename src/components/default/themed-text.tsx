@@ -12,7 +12,8 @@ export type ThemedTextProps = TextProps & {
     | "title"
     | "defaultSemiBold"
     | "subtitle"
-    | "link";
+    | "link"
+    | "bigText";
 };
 
 export function ThemedText({
@@ -35,6 +36,7 @@ export function ThemedText({
         type === "defaultSemiBold" ? styles.defaultSemiBold : undefined,
         type === "subtitle" ? styles.subtitle : undefined,
         type === "link" ? styles.link : undefined,
+        type === "bigText" ? styles.bigText : undefined,
         style,
       ]}
       {...rest}
@@ -65,7 +67,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: "bold",
+    fontFamily: "UrbanistBold",
+  },
+  bigText: {
+    fontSize: 20,
+    fontFamily: "UrbanistRegular",
   },
   link: {
     lineHeight: 30,
