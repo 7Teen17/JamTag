@@ -1,60 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { MusicTrack } from "../services/music/types";
-import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 import { useSongTags } from "../hooks/useSongTags";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
-type SearchedItemProps = {
-  id: string;
-  track?: MusicTrack;
+type HorizontalSongItemProps = {
+  track: MusicTrack;
+  onPress?: (track: MusicTrack) => void;
 };
 
-export default function SearchedItem({
-  id,
-  track: searchTrack,
-}: SearchedItemProps) {
-  const [loadedTrack, setTrack] = useState<MusicTrack | null>(null);
-  const [loading, setLoading] = useState(!searchTrack);
-  const { isAuthenticated, musicService } = useSpotifyAuth();
-  const { openSheet } = useBottomSheet();
-
-  const track = searchTrack ?? loadedTrack;
-
-  useEffect(() => {
-    if (searchTrack) return;
-    async function loadTrack() {
-      if (!isAuthenticated || !musicService) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      const returned_track: MusicTrack | null = await musicService.getTrack(id);
-      setTrack(returned_track);
-      setLoading(false);
-    }
-    loadTrack();
-  }, [id, isAuthenticated, musicService, searchTrack]);
-
+export default function HorizontalSongItem({
+  track,
+  onPress,
+}: HorizontalSongItemProps) {
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = useSongTags(searchTrack || !loading ? track?.providerTrackId : "");
+  const tags = useSongTags(track.providerTrackId);
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 4);
 
-  return (
-    <TouchableOpacity
-      onPress={(event) => {
-        if (track) {
-          openSheet(track);
-        }
-      }}
-      style={styles.container}
-    >
+  const content = (
+    <>
       <Image
         source={
-          track?.artworkUrl
+          track.artworkUrl
             ? { uri: track.artworkUrl }
             : require("@/assets/images/no_album_cover.png")
         }
@@ -67,11 +36,7 @@ export default function SearchedItem({
           numberOfLines={1}
           ellipsizeMode="tail"
         >
-          {!searchTrack && loading
-            ? "Loading..."
-            : track
-              ? track.title
-              : "Not found."}
+          {track.title}
         </ThemedText>
         <View style={styles.artistRow}>
           <ThemedText
@@ -80,13 +45,9 @@ export default function SearchedItem({
             numberOfLines={1}
             ellipsizeMode="tail"
           >
-            {!searchTrack && loading
-              ? "..."
-              : track
-                ? track.artist
-                : "Not found."}
+            {track.artist}
           </ThemedText>
-          {track?.isExplicit && <Tag type="explicit" value="E"></Tag>}
+          {track.isExplicit && <Tag type="explicit" value="E"></Tag>}
         </View>
         <View
           style={styles.tagRow}
@@ -102,7 +63,19 @@ export default function SearchedItem({
           )}
         </View>
       </View>
+    </>
+  );
+
+  return onPress ? (
+    <TouchableOpacity
+      style={styles.container}
+      onPress={() => onPress(track)}
+      accessibilityRole="button"
+    >
+      {content}
     </TouchableOpacity>
+  ) : (
+    <View style={styles.container}>{content}</View>
   );
 }
 
@@ -137,6 +110,7 @@ const styles = StyleSheet.create({
   infoView: {
     flex: 1,
     minWidth: 0,
+    justifyContent: "center",
   },
   tagRow: {
     width: "100%",
@@ -144,19 +118,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     overflow: "hidden",
     gap: 4,
-  },
-  tagButton: {
-    width: 80,
-    height: "auto",
-    backgroundColor: "#D9D9D9",
-    borderRadius: 5,
-    margin: 5,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  tagButtonText: {
-    color: "black",
-    fontSize: 16,
   },
 });

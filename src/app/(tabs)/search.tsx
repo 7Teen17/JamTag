@@ -1,5 +1,6 @@
 import { ThemedText } from "@/src/components/default/themed-text";
-import SearchedItem from "@/src/components/searchedItem";
+import HorizontalSongItem from "@/src/components/HorizontalSongItem";
+import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { MusicTrack } from "@/src/services/music/types";
 import { Search } from "lucide-react-native";
@@ -14,6 +15,7 @@ import {
 
 export default function SearchScreen() {
   const { musicService } = useSpotifyAuth();
+  const { openSheet } = useBottomSheet();
   const [query, setQuery] = useState("");
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
@@ -103,7 +105,7 @@ export default function SearchScreen() {
         }
         keyExtractor={(track) => track.providerTrackId}
         renderItem={({ item }) => (
-          <SearchedItem id={item.providerTrackId} track={item} />
+          <HorizontalSongItem track={item} onPress={openSheet} />
         )}
         keyboardShouldPersistTaps="handled"
         onEndReached={() => {

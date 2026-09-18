@@ -1,5 +1,7 @@
 import { ThemedText } from "@/src/components/default/themed-text";
-import SearchedItem from "@/src/components/searchedItem";
+import HorizontalSongItem from "@/src/components/HorizontalSongItem";
+import { useBottomSheet } from "@/src/components/bottomSheetProvider";
+import { useTrack } from "@/src/hooks/useTrack";
 import Tag from "@/src/components/tag";
 import { ChevronRight, Search } from "lucide-react-native";
 import { useState } from "react";
@@ -8,6 +10,8 @@ import { ScrollView } from "react-native-gesture-handler";
 
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
+  const { openSheet } = useBottomSheet();
+  const { track, loading } = useTrack("0nbXyq5TXYPCO7pr3N8S4I");
   return (
     <>
       <View style={styles.searchBar}>
@@ -94,13 +98,13 @@ export default function CreateScreen() {
         <ThemedText>17 Songs • 1 million hours</ThemedText>
       </View>
       <ScrollView>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
-        <SearchedItem id="0nbXyq5TXYPCO7pr3N8S4I"></SearchedItem>
+        {track ? (
+          Array.from({ length: 7 }, (_, index) => (
+            <HorizontalSongItem key={index} track={track} onPress={openSheet} />
+          ))
+        ) : (
+          <ThemedText>{loading ? "Loading..." : "Not found."}</ThemedText>
+        )}
       </ScrollView>
       <TouchableOpacity style={styles.createButton} activeOpacity={0.5}>
         <ThemedText

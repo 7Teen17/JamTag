@@ -22,7 +22,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createTag, getAllTags, setTag } from "../db/db";
 import { DefaultTrack, MusicTrack } from "../services/music/types";
 import { useSongTags } from "../hooks/useSongTags";
-import CurrentTaggingItem from "./currentTaggingItem";
+import HorizontalSongItem from "./HorizontalSongItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
 
@@ -89,7 +89,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           <ThemedText type="title" style={styles.editTagsText}>
             Edit Tags
           </ThemedText>
-          <CurrentTaggingItem providedTrack={track}></CurrentTaggingItem>
+          <HorizontalSongItem track={track} />
           <View
             style={{
               height: 1,
