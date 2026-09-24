@@ -50,6 +50,11 @@ export function setupDB() {
   db.execSync(`
     PRAGMA foreign_keys = ON;
 
+    CREATE TABLE IF NOT EXISTS spotify_playlist (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      playlist_id TEXT NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS songs (
       id TEXT PRIMARY KEY,
       provider TEXT NOT NULL,
@@ -75,6 +80,20 @@ export function setupDB() {
       FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
     );
   `);
+}
+
+export function getManagedPlaylistId() {
+  return db.getFirstSync<{ playlist_id: string }>(
+    "SELECT playlist_id FROM spotify_playlist WHERE id = 1",
+  )?.playlist_id;
+}
+
+export function saveManagedPlaylistId(playlistId: string) {
+  db.runSync(
+    `INSERT INTO spotify_playlist (id, playlist_id) VALUES (1, ?)
+     ON CONFLICT(id) DO UPDATE SET playlist_id = excluded.playlist_id`,
+    [playlistId],
+  );
 }
 
 export function cacheSong(song: MusicTrack) {

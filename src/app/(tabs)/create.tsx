@@ -2,16 +2,27 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
+import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
-import { useCallback, useState } from "react";
-import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import {
+  Alert,
+  Linking,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [allTags, setAllTags] = useState<string[]>([]);
+  const { musicService, refresh } = useSpotifyAuth();
+  const [isExporting, setIsExporting] = useState(false);
+  const exportInProgressLock = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -27,6 +38,27 @@ export default function CreateScreen() {
     totalMinutes >= 60
       ? `${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min`
       : `${totalMinutes} min`;
+
+  async function listen() {
+    if (!musicService || !songs.length || exportInProgressLock.current) return;
+    exportInProgressLock.current = true;
+    setIsExporting(true);
+    try {
+      const token = await refresh();
+      if (!token) throw new Error("Please sign in to Spotify again.");
+      musicService.setAuthSession({ accessToken: token.accessToken });
+      const playlist = await musicService.exportCurrentJam(songs);
+      await Linking.openURL(playlist.url);
+    } catch (error) {
+      Alert.alert(
+        "Couldn't open your jam",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    } finally {
+      exportInProgressLock.current = false;
+      setIsExporting(false);
+    }
+  }
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((tags) =>
@@ -155,7 +187,15 @@ export default function CreateScreen() {
           <HorizontalSongItem key={song.providerTrackId} track={song} />
         ))}
       </ScrollView>
-      <TouchableOpacity style={styles.createButton} activeOpacity={0.5}>
+      <TouchableOpacity
+        style={[
+          styles.createButton,
+          (!musicService || !songs.length || isExporting) && { opacity: 0.5 },
+        ]}
+        activeOpacity={0.5}
+        disabled={!musicService || !songs.length || isExporting}
+        onPress={listen}
+      >
         <ThemedText
           style={{
             flex: 1,
@@ -164,7 +204,7 @@ export default function CreateScreen() {
           }}
           type="subtitle"
         >
-          Listen
+          {isExporting ? "Preparing Jam…" : "Listen"}
         </ThemedText>
       </TouchableOpacity>
     </>

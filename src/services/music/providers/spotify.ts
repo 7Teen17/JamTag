@@ -1,4 +1,8 @@
-import { getCachedSong } from "@/src/db/db";
+import {
+  getCachedSong,
+  getManagedPlaylistId,
+  saveManagedPlaylistId,
+} from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
 import type { MusicTrack, MusicTrackPage, PlaybackState } from "../types";
@@ -19,9 +23,104 @@ export const SPOTIFY_SCOPES = [
 
 export const SPOTIFY_TOKEN_KEY = "spotify_token_response";
 
+const JAMTAG_MARKER = "[JamTag:current-jam]";
+
+type SpotifyPlaylist = {
+  id: string;
+  description: string | null;
+  owner: { id: string };
+};
+
 export class SpotifyMusicService extends MusicService {
   readonly id = "spotify";
   readonly displayName = "Spotify";
+
+  async exportCurrentJam(tracks: MusicTrack[]): Promise<{ url: string }> {
+    if (!tracks.length) throw new Error("Select songs before exporting a jam.");
+    if (tracks.some((track) => track.provider !== this.id)) {
+      throw new Error("Only Spotify tracks can be exported to Spotify.");
+    }
+
+    const uris = [
+      ...new Set(tracks.map((track) => `spotify:track:${track.providerTrackId}`)),
+    ];
+    const profileResponse = await fetch("https://api.spotify.com/v1/me", {
+      method: "GET",
+      headers: this.getAuthorizationHeaders(),
+    });
+    if (!profileResponse.ok) {
+      throw new Error(`Spotify profile lookup failed (${profileResponse.status}).`);
+    }
+    const { id: accountId } = await profileResponse.json();
+    const savedId = getManagedPlaylistId();
+    let playlistId: string | undefined;
+
+    // Check the library so a removed playlist isn't silently reused.
+    for (let offset = 0; ; offset += 50) {
+      const response = await fetch(
+        `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
+        { method: "GET", headers: this.getAuthorizationHeaders() },
+      );
+      if (!response.ok) {
+        throw new Error(`Spotify playlist lookup failed (${response.status}).`);
+      }
+      const page: {
+        items: (SpotifyPlaylist | null)[];
+        next: string | null;
+      } = await response.json();
+      const owned = page.items.filter(
+        (playlist) => playlist?.owner.id === accountId,
+      );
+      if (savedId && owned.some((playlist) => playlist?.id === savedId)) {
+        playlistId = savedId;
+        break;
+      }
+      playlistId ??= owned.find(
+        (playlist) => playlist?.description?.includes(JAMTAG_MARKER),
+      )?.id;
+      if (!page.next) break;
+    }
+
+    if (!playlistId) {
+      const response = await fetch("https://api.spotify.com/v1/me/playlists", {
+        method: "POST",
+        headers: {
+          ...this.getAuthorizationHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "JamTag — Current Jam",
+          description: `Your latest JamTag mix. Replaced each time you tap Listen. ${JAMTAG_MARKER}`,
+          public: false,
+        }),
+      });
+      if (!response.ok) {
+        throw new Error(`Spotify playlist creation failed (${response.status}).`);
+      }
+      const playlist: SpotifyPlaylist = await response.json();
+      playlistId = playlist.id;
+    }
+    // Save before uploading so a failed upload can retry using the same playlist.
+    saveManagedPlaylistId(playlistId);
+
+    for (let offset = 0; offset < uris.length; offset += 100) {
+      const response = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}/items`,
+        {
+          method: offset === 0 ? "PUT" : "POST",
+          headers: {
+            ...this.getAuthorizationHeaders(),
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ uris: uris.slice(offset, offset + 100) }),
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`Spotify playlist update failed (${response.status}). Please try again.`);
+      }
+    }
+    return { url: `https://open.spotify.com/playlist/${playlistId}` };
+  }
 
   async getCurrentPlayback(): Promise<PlaybackState | null> {
     const response = await fetch(
