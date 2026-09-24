@@ -1,9 +1,8 @@
-import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
-import { useTrack } from "@/src/hooks/useTrack";
+import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
 import { useCallback, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
@@ -12,15 +11,22 @@ import { ScrollView } from "react-native-gesture-handler";
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const { openSheet } = useBottomSheet();
-  const { track, loading } = useTrack("0nbXyq5TXYPCO7pr3N8S4I");
+  const [allTags, setAllTags] = useState<string[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      setAllTags(getAllTags());
+    }, []),
+  );
+
   const songs = getSongsFromTags(selectedTags);
   const totalMinutes = Math.floor(
     songs.reduce((total, song) => total + (song.durationMs ?? 0), 0) / 60000,
   );
-  const duration = totalMinutes >= 60
-    ? `${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min`
-    : `${totalMinutes} min`;
+  const duration =
+    totalMinutes >= 60
+      ? `${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min`
+      : `${totalMinutes} min`;
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((tags) =>
@@ -80,7 +86,7 @@ export default function CreateScreen() {
         style={styles.tagScroll}
         contentContainerStyle={styles.tagScrollContent}
       >
-        {getAllTags()
+        {allTags
           .filter(
             (tag) =>
               !selectedTags.includes(tag) &&
