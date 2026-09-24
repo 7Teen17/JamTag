@@ -154,7 +154,10 @@ export function getCachedSong(
   );
 
   return songWithMatchingIsrc
-    ? { ...songWithMatchingIsrc, isExplicit: Boolean(songWithMatchingIsrc.isExplicit) }
+    ? {
+        ...songWithMatchingIsrc,
+        isExplicit: Boolean(songWithMatchingIsrc.isExplicit),
+      }
     : null;
 }
 
@@ -205,15 +208,17 @@ export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
     );
     if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
   } else {
-    const result = db.runSync("DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?", [
-      song.providerTrackId,
-      existingTag.id,
-    ]);
+    const result = db.runSync(
+      "DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?",
+      [song.providerTrackId, existingTag.id],
+    );
     if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
   }
 }
 
-export function getTagsFromSong(providerTrack: Pick<MusicTrack, "providerTrackId">) {
+export function getTagsFromSong(
+  providerTrack: Pick<MusicTrack, "providerTrackId">,
+) {
   return (
     db.getAllSync(
       `
@@ -251,6 +256,38 @@ export function getSongsFromTag(tag: string) {
       `,
     [tagRow.id],
   ) as MusicTrack[];
+
+  return songs.map((song) => ({
+    ...song,
+    isExplicit: Boolean(song.isExplicit),
+  }));
+}
+
+export function getSongsFromTags(tags: string[]): MusicTrack[] {
+  const normalizedTags = [...new Set(tags.map(normalizeTag))];
+  const placeholders = normalizedTags.map(() => "?").join(", ");
+  const songs = db.getAllSync<MusicTrack>(
+    `
+      SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album,
+        s.artwork_url AS artworkUrl, s.durationMs, s.isrc, s.is_explicit AS isExplicit
+      FROM songs AS s
+      ${
+        normalizedTags.length
+          ? `
+        WHERE s.id IN (
+          SELECT st.song_id
+          FROM song_tags AS st
+          JOIN tags AS t ON t.id = st.tag_id
+          WHERE LOWER(t.name) IN (${placeholders})
+          GROUP BY st.song_id
+          HAVING COUNT(DISTINCT LOWER(t.name)) = ?
+        )
+      `
+          : ""
+      }
+    `,
+    normalizedTags.length ? [...normalizedTags, normalizedTags.length] : [],
+  );
 
   return songs.map((song) => ({
     ...song,

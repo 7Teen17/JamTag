@@ -2,7 +2,7 @@ import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
-import { getAllTags } from "@/src/db/db";
+import { getAllTags, getSongsFromTags } from "@/src/db/db";
 import { useTrack } from "@/src/hooks/useTrack";
 import { ChevronRight, Search } from "lucide-react-native";
 import { useCallback, useState } from "react";
@@ -14,6 +14,13 @@ export default function CreateScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { openSheet } = useBottomSheet();
   const { track, loading } = useTrack("0nbXyq5TXYPCO7pr3N8S4I");
+  const songs = getSongsFromTags(selectedTags);
+  const totalMinutes = Math.floor(
+    songs.reduce((total, song) => total + (song.durationMs ?? 0), 0) / 60000,
+  );
+  const duration = totalMinutes >= 60
+    ? `${Math.floor(totalMinutes / 60)} hr ${totalMinutes % 60} min`
+    : `${totalMinutes} min`;
 
   const toggleTag = useCallback((tag: string) => {
     setSelectedTags((tags) =>
@@ -133,16 +140,14 @@ export default function CreateScreen() {
         <ThemedText type="subtitle" style={styles.sectionNameText}>
           Your Jam
         </ThemedText>
-        <ThemedText>17 Songs • 1 million hours</ThemedText>
+        <ThemedText>
+          {songs.length} {songs.length === 1 ? "Song" : "Songs"} • {duration}
+        </ThemedText>
       </View>
       <ScrollView>
-        {track ? (
-          Array.from({ length: 7 }, (_, index) => (
-            <HorizontalSongItem key={index} track={track} onPress={openSheet} />
-          ))
-        ) : (
-          <ThemedText>{loading ? "Loading..." : "Not found."}</ThemedText>
-        )}
+        {songs.map((song) => (
+          <HorizontalSongItem key={song.providerTrackId} track={song} />
+        ))}
       </ScrollView>
       <TouchableOpacity style={styles.createButton} activeOpacity={0.5}>
         <ThemedText
