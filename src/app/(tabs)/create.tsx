@@ -1,17 +1,28 @@
+import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
-import { useBottomSheet } from "@/src/components/bottomSheetProvider";
-import { useTrack } from "@/src/hooks/useTrack";
 import Tag from "@/src/components/tag";
+import { getAllTags } from "@/src/db/db";
+import { useTrack } from "@/src/hooks/useTrack";
 import { ChevronRight, Search } from "lucide-react-native";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { StyleSheet, TextInput, TouchableOpacity, View } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const { openSheet } = useBottomSheet();
   const { track, loading } = useTrack("0nbXyq5TXYPCO7pr3N8S4I");
+
+  const toggleTag = useCallback((tag: string) => {
+    setSelectedTags((tags) =>
+      tags.includes(tag)
+        ? tags.filter((eachTag) => eachTag !== tag)
+        : [...tags, tag],
+    );
+    setTagSearch("");
+  }, []);
   return (
     <>
       <View style={styles.searchBar}>
@@ -36,9 +47,21 @@ export default function CreateScreen() {
         style={styles.tagScroll}
         contentContainerStyle={styles.tagScrollContent}
       >
-        {Array.from({ length: 10 }).map((_, index) => (
-          <Tag key={index} value="test" type="large" removeable />
-        ))}
+        {selectedTags.length == 0 ? (
+          <ThemedText>No Tags Selected</ThemedText>
+        ) : (
+          selectedTags.map((tag) => (
+            <Tag
+              key={tag}
+              value={tag}
+              type="large"
+              removeable
+              onPress={() => {
+                toggleTag(tag);
+              }}
+            />
+          ))
+        )}
       </ScrollView>
       {/* Suggested Tags Section */}
       <ThemedText style={styles.sectionNameText} type="bigText">
@@ -50,9 +73,24 @@ export default function CreateScreen() {
         style={styles.tagScroll}
         contentContainerStyle={styles.tagScrollContent}
       >
-        {Array.from({ length: 10 }).map((_, index) => (
-          <Tag key={index} value="test" type="large" addable />
-        ))}
+        {getAllTags()
+          .filter(
+            (tag) =>
+              !selectedTags.includes(tag) &&
+              (!tagSearch.trim() ||
+                tag.toLowerCase().includes(tagSearch.trim().toLowerCase())),
+          )
+          .map((tag) => (
+            <Tag
+              key={tag}
+              value={tag}
+              type="large"
+              addable
+              onPress={() => {
+                toggleTag(tag);
+              }}
+            />
+          ))}
       </ScrollView>
       {/* Spacer bar */}
       <View
