@@ -1,14 +1,9 @@
-import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
-import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const { openSheet, closeSheet } = useBottomSheet();
-
   const test_songs = [
     "0nbXyq5TXYPCO7pr3N8S4I",
     "4XcZp2xqbiD8YsnPboNUDo",

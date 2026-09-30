@@ -61,10 +61,6 @@ export default function RootLayout() {
                   headerTitleStyle: { fontFamily: "UrbanistBold" },
                 }}
               />
-              <Stack.Screen
-                name="editTags"
-                options={{ presentation: "modal", title: "Edit Tags" }}
-              />
               <Stack.Screen name="login" options={{ headerShown: false }} />
             </Stack>
             <StatusBar style="auto" />
