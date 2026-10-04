@@ -1,3 +1,5 @@
+import { ImageSourcePropType } from "react-native";
+
 export type MusicProviderId = "spotify" | "appleMusic";
 
 export type MusicTrack = {
@@ -37,4 +39,14 @@ export type MusicAuthSession = {
   refreshToken?: string;
   expiresIn?: number;
   issuedAt?: number;
+};
+
+export type ServiceProfile = {
+  username: string;
+  profilePictureSource: ImageSourcePropType;
+};
+
+export const DEFAULT_PROFILE: ServiceProfile = {
+  username: "None",
+  profilePictureSource: require("@/assets/images/no_album_cover.png"),
 };

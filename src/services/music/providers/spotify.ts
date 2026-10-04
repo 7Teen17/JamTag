@@ -5,7 +5,9 @@ import {
 } from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
-import type { MusicTrack, MusicTrackPage, PlaybackState } from "../types";
+import type { MusicTrack, MusicTrackPage, PlaybackState, ServiceProfile } from "../types";
+import { DEFAULT_PROFILE } from "../types";
+import { spotifyRequest } from "./spotify-api";
 
 export const SPOTIFY_DISCOVERY: DiscoveryDocument = {
   authorizationEndpoint: "https://accounts.spotify.com/authorize",
@@ -35,6 +37,23 @@ export class SpotifyMusicService extends MusicService {
   readonly id = "spotify";
   readonly displayName = "Spotify";
 
+  async getProfile(): Promise<ServiceProfile> {
+    const response = await spotifyRequest(this.authSession.accessToken, "/me");
+    if (!response) {
+      throw new Error("Spotify profile lookup returned no content (204).");
+    }
+
+    const data = await response.json();
+    const imageUrl = data.images?.[0]?.url;
+
+    return {
+      username: data.display_name ?? DEFAULT_PROFILE.username,
+      profilePictureSource: imageUrl
+        ? { uri: imageUrl }
+        : DEFAULT_PROFILE.profilePictureSource,
+    };
+  }
+
   async exportCurrentJam(tracks: MusicTrack[]): Promise<{ url: string }> {
     if (!tracks.length) throw new Error("Select songs before exporting a jam.");
     if (tracks.some((track) => track.provider !== this.id)) {
@@ -44,12 +63,12 @@ export class SpotifyMusicService extends MusicService {
     const uris = [
       ...new Set(tracks.map((track) => `spotify:track:${track.providerTrackId}`)),
     ];
-    const profileResponse = await fetch("https://api.spotify.com/v1/me", {
-      method: "GET",
-      headers: this.getAuthorizationHeaders(),
-    });
-    if (!profileResponse.ok) {
-      throw new Error(`Spotify profile lookup failed (${profileResponse.status}).`);
+    const profileResponse = await spotifyRequest(
+      this.authSession.accessToken,
+      "/me",
+    );
+    if (!profileResponse) {
+      throw new Error("Spotify profile lookup failed (204).");
     }
     const { id: accountId } = await profileResponse.json();
     const savedId = getManagedPlaylistId();
@@ -57,12 +76,12 @@ export class SpotifyMusicService extends MusicService {
 
     // Check the library so a removed playlist isn't silently reused.
     for (let offset = 0; ; offset += 50) {
-      const response = await fetch(
-        `https://api.spotify.com/v1/me/playlists?limit=50&offset=${offset}`,
-        { method: "GET", headers: this.getAuthorizationHeaders() },
+      const response = await spotifyRequest(
+        this.authSession.accessToken,
+        `/me/playlists?limit=50&offset=${offset}`,
       );
-      if (!response.ok) {
-        throw new Error(`Spotify playlist lookup failed (${response.status}).`);
+      if (!response) {
+        throw new Error("Spotify playlist lookup failed (204).");
       }
       const page: {
         items: (SpotifyPlaylist | null)[];
@@ -82,20 +101,20 @@ export class SpotifyMusicService extends MusicService {
     }
 
     if (!playlistId) {
-      const response = await fetch("https://api.spotify.com/v1/me/playlists", {
-        method: "POST",
-        headers: {
-          ...this.getAuthorizationHeaders(),
-          "Content-Type": "application/json",
+      const response = await spotifyRequest(
+        this.authSession.accessToken,
+        "/me/playlists",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            name: "JamTag — Current Jam",
+            description: `Your latest JamTag mix. Replaced each time you tap Listen. ${JAMTAG_MARKER}`,
+            public: false,
+          }),
         },
-        body: JSON.stringify({
-          name: "JamTag — Current Jam",
-          description: `Your latest JamTag mix. Replaced each time you tap Listen. ${JAMTAG_MARKER}`,
-          public: false,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error(`Spotify playlist creation failed (${response.status}).`);
+      );
+      if (!response) {
+        throw new Error("Spotify playlist creation failed (204).");
       }
       const playlist: SpotifyPlaylist = await response.json();
       playlistId = playlist.id;
@@ -104,34 +123,25 @@ export class SpotifyMusicService extends MusicService {
     saveManagedPlaylistId(playlistId);
 
     for (let offset = 0; offset < uris.length; offset += 100) {
-      const response = await fetch(
-        `https://api.spotify.com/v1/playlists/${playlistId}/items`,
+      await spotifyRequest(
+        this.authSession.accessToken,
+        `/playlists/${playlistId}/items`,
         {
           method: offset === 0 ? "PUT" : "POST",
-          headers: {
-            ...this.getAuthorizationHeaders(),
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({ uris: uris.slice(offset, offset + 100) }),
         },
       );
-      if (!response.ok) {
-        throw new Error(`Spotify playlist update failed (${response.status}). Please try again.`);
-      }
     }
     return { url: `https://open.spotify.com/playlist/${playlistId}` };
   }
 
   async getCurrentPlayback(): Promise<PlaybackState | null> {
-    const response = await fetch(
-      "https://api.spotify.com/v1/me/player/currently-playing",
-      {
-        method: "GET",
-        headers: this.getAuthorizationHeaders(),
-      },
+    const response = await spotifyRequest(
+      this.authSession.accessToken,
+      "/me/player/currently-playing",
     );
 
-    if (!response.ok || response.status === 204) {
+    if (!response) {
       return null;
     }
 
@@ -161,16 +171,13 @@ export class SpotifyMusicService extends MusicService {
   }
 
   async searchTracks(_query: string, offset = 0): Promise<MusicTrackPage> {
-    const response = await fetch(
-      `https://api.spotify.com/v1/search?q=${encodeURIComponent(_query)}&type=track&limit=10&offset=${offset}`,
-      {
-        method: "GET",
-        headers: this.getAuthorizationHeaders(),
-      },
+    const response = await spotifyRequest(
+      this.authSession.accessToken,
+      `/search?q=${encodeURIComponent(_query)}&type=track&limit=10&offset=${offset}`,
     );
 
-    if (!response.ok || response.status === 204) {
-      throw new Error(`Spotify search failed (${response.status}).`);
+    if (!response) {
+      throw new Error("Spotify search failed (204).");
     }
 
     const result = await response.json();
@@ -215,12 +222,12 @@ export class SpotifyMusicService extends MusicService {
       return dbSong;
     }
 
-    const response = await fetch("https://api.spotify.com/v1/tracks/" + _id, {
-      method: "GET",
-      headers: this.getAuthorizationHeaders(),
-    });
+    const response = await spotifyRequest(
+      this.authSession.accessToken,
+      "/tracks/" + _id,
+    );
 
-    if (!response.ok || response.status === 204) {
+    if (!response) {
       return null;
     }
 
@@ -239,15 +246,5 @@ export class SpotifyMusicService extends MusicService {
     };
     //After the current track wasnt cached, get from Spotify and then check if it has same ISRC as cached song
     return getCachedSong(_id, song.isrc) ?? song;
-  }
-
-  protected getAuthorizationHeaders() {
-    if (!this.connected()) {
-      throw new Error("Spotify access token is missing.");
-    }
-
-    return {
-      Authorization: `Bearer ${this.authSession.accessToken}`,
-    };
   }
 }
