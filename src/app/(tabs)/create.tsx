@@ -2,6 +2,7 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
+import type { SongTag } from "@/src/services/music/types";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
@@ -18,8 +19,8 @@ import { ScrollView } from "react-native-gesture-handler";
 
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [allTags, setAllTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
+  const [allTags, setAllTags] = useState<SongTag[]>([]);
   const { musicService, refresh } = useSpotifyAuth();
   const [isExporting, setIsExporting] = useState(false);
   const exportInProgressLock = useRef(false);
@@ -30,7 +31,7 @@ export default function CreateScreen() {
     }, []),
   );
 
-  const songs = getSongsFromTags(selectedTags);
+  const songs = getSongsFromTags(selectedTags.map((tag) => tag.id));
   const totalMinutes = Math.floor(
     songs.reduce((total, song) => total + (song.durationMs ?? 0), 0) / 60000,
   );
@@ -60,10 +61,10 @@ export default function CreateScreen() {
     }
   }
 
-  const toggleTag = useCallback((tag: string) => {
+  const toggleTag = useCallback((tag: SongTag) => {
     setSelectedTags((tags) =>
-      tags.includes(tag)
-        ? tags.filter((eachTag) => eachTag !== tag)
+      tags.some((eachTag) => eachTag.id === tag.id)
+        ? tags.filter((eachTag) => eachTag.id !== tag.id)
         : [...tags, tag],
     );
     setTagSearch("");
@@ -97,8 +98,9 @@ export default function CreateScreen() {
         ) : (
           selectedTags.map((tag) => (
             <Tag
-              key={tag}
-              value={tag}
+              key={tag.id}
+              value={tag.name}
+              color={tag.color}
               type="large"
               removeable
               onPress={() => {
@@ -121,14 +123,15 @@ export default function CreateScreen() {
         {allTags
           .filter(
             (tag) =>
-              !selectedTags.includes(tag) &&
+              !selectedTags.some((selected) => selected.id === tag.id) &&
               (!tagSearch.trim() ||
-                tag.toLowerCase().includes(tagSearch.trim().toLowerCase())),
+                tag.name.toLowerCase().includes(tagSearch.trim().toLowerCase())),
           )
           .map((tag) => (
             <Tag
-              key={tag}
-              value={tag}
+              key={tag.id}
+              value={tag.name}
+              color={tag.color}
               type="large"
               addable
               onPress={() => {

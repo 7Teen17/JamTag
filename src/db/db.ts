@@ -1,11 +1,49 @@
 import * as SQLite from "expo-sqlite";
-import { MusicTrack } from "../services/music/types";
+import type { MusicTrack, SongTag } from "../services/music/types";
 
 const db = SQLite.openDatabaseSync("music.db");
 
-const songTagSnapshots = new Map<string, string[]>();
+const tagColors = ["#DC2626", "#2563EB", "#16A34A", "#9333EA", "#EA580C"];
+
+const songTagSnapshots = new Map<string, SongTag[]>();
 const songTagListeners = new Map<string, Set<() => void>>();
-const emptyTags: string[] = [];
+const emptyTags: SongTag[] = [];
+const recentlyTaggedSnapshots = new Map<number, string[]>();
+const recentlyTaggedListeners = new Set<() => void>();
+
+export function subscribeRecentlyTagged(listener: () => void) {
+  recentlyTaggedListeners.add(listener);
+  return () => {
+    recentlyTaggedListeners.delete(listener);
+  };
+}
+
+export function getRecentlyTaggedSongIds(limit = 10) {
+  return db
+    .getAllSync<{ id: string }>(
+      `SELECT s.id FROM songs AS s
+     WHERE s.last_tagged_at IS NOT NULL
+       AND EXISTS (SELECT 1 FROM song_tags AS st WHERE st.song_id = s.id)
+     ORDER BY s.last_tagged_at DESC, s.id ASC
+     LIMIT ?`,
+      [limit],
+    )
+    .map((song) => song.id);
+}
+
+export function getRecentlyTaggedSnapshot(limit = 10) {
+  let songIds = recentlyTaggedSnapshots.get(limit);
+  if (!songIds) {
+    songIds = getRecentlyTaggedSongIds(limit);
+    recentlyTaggedSnapshots.set(limit, songIds);
+  }
+  return songIds;
+}
+
+function notifyRecentlyTaggedChanged() {
+  recentlyTaggedSnapshots.clear();
+  recentlyTaggedListeners.forEach((listener) => listener());
+}
 
 export function subscribeSongTags(songId: string, listener: () => void) {
   let listeners = songTagListeners.get(songId);
@@ -36,16 +74,6 @@ function notifySongTagsChanged(songId: string) {
   songTagListeners.get(songId)?.forEach((listener) => listener());
 }
 
-function normalizeTag(tag: string) {
-  const normalizedTag = tag.trim().toLowerCase();
-
-  if (!normalizedTag) {
-    throw new Error("Tag name cannot be empty.");
-  }
-
-  return normalizedTag;
-}
-
 export function setupDB() {
   db.execSync(`
     PRAGMA foreign_keys = ON;
@@ -64,12 +92,14 @@ export function setupDB() {
       artwork_url TEXT,
       durationMs INTEGER,
       isrc TEXT,
-      is_explicit INTEGER NOT NULL DEFAULT 0
+      is_explicit INTEGER NOT NULL DEFAULT 0,
+      last_tagged_at INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE
+      name TEXT NOT NULL UNIQUE,
+      color TEXT NOT NULL DEFAULT '#079f38'
     );
 
     CREATE TABLE IF NOT EXISTS song_tags (
@@ -180,132 +210,128 @@ export function getCachedSong(
     : null;
 }
 
-export function createTag(tag: string) {
-  const normalizedTag = normalizeTag(tag);
-  const existingTag = db.getFirstSync("SELECT id FROM tags WHERE name = ?", [
-    normalizedTag,
-  ]) as { id: number } | null;
+export function createTag(name: string, color?: string): SongTag {
+  const normalizedName = name.trim().toLowerCase();
+  if (!normalizedName) {
+    throw new Error("Tag name cannot be empty.");
+  }
+  const existingTag = db.getFirstSync<SongTag>(
+    "SELECT id, name, color FROM tags WHERE name = ?",
+    [normalizedName],
+  );
 
   if (existingTag) {
-    return existingTag.id;
+    return existingTag;
   }
 
-  const insertResult = db.runSync("INSERT INTO tags (name) VALUES (?)", [
-    normalizedTag,
-  ]);
-  return insertResult.lastInsertRowId;
-}
-
-export function deleteTag(tag: string) {
-  const normalizedTag = normalizeTag(tag);
-  const songs = db.getAllSync<{ song_id: string }>(
-    `SELECT st.song_id FROM song_tags st
-     JOIN tags t ON t.id = st.tag_id WHERE t.name = ?`,
-    [normalizedTag],
+  const tagColor =
+    color ?? tagColors[Math.floor(Math.random() * tagColors.length)];
+  if (!/^#[0-9a-f]{6}$/i.test(tagColor)) {
+    throw new Error("Tag color must be a six-digit hex color.");
+  }
+  const insertResult = db.runSync(
+    "INSERT INTO tags (name, color) VALUES (?, ?)",
+    [normalizedName, tagColor],
   );
-  db.runSync("DELETE FROM tags WHERE name = ?", [normalizedTag]);
-  songs.forEach(({ song_id }) => notifySongTagsChanged(song_id));
+  return {
+    id: insertResult.lastInsertRowId,
+    name: normalizedName,
+    color: tagColor,
+  };
 }
 
-export function setTag(song: MusicTrack, tag: string, isEnabled: boolean) {
-  const normalizedTag = normalizeTag(tag);
-  const existingTag = db.getFirstSync(
-    "SELECT id FROM tags WHERE LOWER(name) = ?",
-    [normalizedTag],
-  ) as { id: number } | null;
+export function deleteTag(tagId: SongTag["id"]) {
+  const songs = db.getAllSync<{ song_id: string }>(
+    "SELECT song_id FROM song_tags WHERE tag_id = ?",
+    [tagId],
+  );
+  db.withTransactionSync(() => {
+    db.runSync("DELETE FROM tags WHERE id = ?", [tagId]);
+    const now = Date.now();
+    songs.forEach(({ song_id }) => {
+      db.runSync("UPDATE songs SET last_tagged_at = ? WHERE id = ?", [
+        now,
+        song_id,
+      ]);
+    });
+  });
+  songs.forEach(({ song_id }) => notifySongTagsChanged(song_id));
+  if (songs.length > 0) notifyRecentlyTaggedChanged();
+}
 
-  if (!existingTag) {
+export function setTag(
+  song: MusicTrack,
+  tagId: SongTag["id"],
+  isEnabled: boolean,
+) {
+  if (!db.getFirstSync("SELECT id FROM tags WHERE id = ?", [tagId])) {
     return;
   }
 
-  if (isEnabled) {
-    cacheSong(song);
-
+  let changed = false;
+  db.withTransactionSync(() => {
+    if (isEnabled) cacheSong(song);
     const result = db.runSync(
-      "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)",
-      [song.providerTrackId, existingTag.id],
+      isEnabled
+        ? "INSERT OR IGNORE INTO song_tags (song_id, tag_id) VALUES (?, ?)"
+        : "DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?",
+      [song.providerTrackId, tagId],
     );
-    if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
-  } else {
-    const result = db.runSync(
-      "DELETE FROM song_tags WHERE song_id = ? AND tag_id = ?",
-      [song.providerTrackId, existingTag.id],
-    );
-    if (result.changes > 0) notifySongTagsChanged(song.providerTrackId);
+    changed = result.changes > 0;
+    if (changed) {
+      db.runSync("UPDATE songs SET last_tagged_at = ? WHERE id = ?", [
+        Date.now(),
+        song.providerTrackId,
+      ]);
+    }
+  });
+  if (changed) {
+    notifySongTagsChanged(song.providerTrackId);
+    notifyRecentlyTaggedChanged();
   }
 }
 
 export function getTagsFromSong(
   providerTrack: Pick<MusicTrack, "providerTrackId">,
 ) {
-  return (
-    db.getAllSync(
-      `
-          SELECT t.name
-          FROM song_tags AS st
-          JOIN tags AS t ON t.id = st.tag_id
-          WHERE st.song_id = ?
-        `,
-      [providerTrack.providerTrackId],
-    ) as { name: string }[]
-  ).map((row) => row.name);
+  return db.getAllSync<SongTag>(
+    `SELECT t.id, t.name, t.color
+     FROM song_tags AS st
+     JOIN tags AS t ON t.id = st.tag_id
+     WHERE st.song_id = ?`,
+    [providerTrack.providerTrackId],
+  );
 }
 
 export function getAllTags() {
-  return (
-    db.getAllSync("SELECT name FROM tags ORDER BY name") as { name: string }[]
-  ).map((row) => row.name);
+  return db.getAllSync<SongTag>(
+    "SELECT id, name, color FROM tags ORDER BY name",
+  );
 }
 
-export function getSongsFromTag(tag: string) {
-  const tagRow = db.getFirstSync("SELECT id FROM tags WHERE LOWER(name) = ?", [
-    normalizeTag(tag),
-  ]) as { id: number } | null;
-
-  if (!tagRow) {
-    return [];
-  }
-
-  const songs = db.getAllSync(
-    `
-        SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album, s.artwork_url AS artworkUrl, s.durationMs, s.isrc, s.is_explicit AS isExplicit
-        FROM song_tags AS st
-        JOIN songs AS s ON s.id = st.song_id
-        WHERE st.tag_id = ?
-      `,
-    [tagRow.id],
-  ) as MusicTrack[];
-
-  return songs.map((song) => ({
-    ...song,
-    isExplicit: Boolean(song.isExplicit),
-  }));
-}
-
-export function getSongsFromTags(tags: string[]): MusicTrack[] {
-  const normalizedTags = [...new Set(tags.map(normalizeTag))];
-  const placeholders = normalizedTags.map(() => "?").join(", ");
+export function getSongsFromTags(tagIds: SongTag["id"][]): MusicTrack[] {
+  const uniqueTagIds = [...new Set(tagIds)];
+  const placeholders = uniqueTagIds.map(() => "?").join(", ");
   const songs = db.getAllSync<MusicTrack>(
     `
       SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album,
         s.artwork_url AS artworkUrl, s.durationMs, s.isrc, s.is_explicit AS isExplicit
       FROM songs AS s
       ${
-        normalizedTags.length
+        uniqueTagIds.length
           ? `
         WHERE s.id IN (
           SELECT st.song_id
           FROM song_tags AS st
-          JOIN tags AS t ON t.id = st.tag_id
-          WHERE LOWER(t.name) IN (${placeholders})
+          WHERE st.tag_id IN (${placeholders})
           GROUP BY st.song_id
-          HAVING COUNT(DISTINCT LOWER(t.name)) = ?
+          HAVING COUNT(DISTINCT st.tag_id) = ?
         )
       `
           : ""
       }
     `,
-    normalizedTags.length ? [...normalizedTags, normalizedTags.length] : [],
+    uniqueTagIds.length ? [...uniqueTagIds, uniqueTagIds.length] : [],
   );
 
   return songs.map((song) => ({

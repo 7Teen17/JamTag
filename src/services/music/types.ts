@@ -2,6 +2,12 @@ import { ImageSourcePropType } from "react-native";
 
 export type MusicProviderId = "spotify" | "appleMusic";
 
+export type SongTag = {
+  id: number;
+  name: string;
+  color: string;
+};
+
 export type MusicTrack = {
   provider: MusicProviderId;
   providerTrackId: string;
@@ -19,7 +25,7 @@ export type MusicTrackPage = {
   nextOffset: number | null;
 };
 
-export const DefaultTrack: MusicTrack = {
+export const DEFAULT_TRACK: MusicTrack = {
   provider: "spotify",
   providerTrackId: "",
   title: "None",

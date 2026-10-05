@@ -1,16 +1,11 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
+import { useRecentlyTagged } from "@/src/hooks/useRecentlyTagged";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 export default function HomeScreen() {
-  const test_songs = [
-    "0nbXyq5TXYPCO7pr3N8S4I",
-    "4XcZp2xqbiD8YsnPboNUDo",
-    "6CUP2khYzdphXebxVTfPE3",
-    "7EW7Yivb93qKAtp5qEm5of",
-    "45J4avUb9Ni0bnETYaYFVJ",
-  ];
+  const recentlyTaggedSongs = useRecentlyTagged();
 
   return (
     <>
@@ -21,7 +16,7 @@ export default function HomeScreen() {
         style={styles.recentItemsScroller}
         contentContainerStyle={styles.recentItems}
       >
-        {test_songs.map((song) => {
+        {recentlyTaggedSongs.map((song) => {
           return <RecentlyTaggedItem key={song} id={song}></RecentlyTaggedItem>;
         })}
       </ScrollView>

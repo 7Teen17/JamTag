@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
-import { DefaultTrack, MusicTrack } from "../services/music/types";
+import { DEFAULT_TRACK, MusicTrack } from "../services/music/types";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
@@ -13,7 +13,7 @@ type RecentlyTaggedItemProps = {
 };
 
 export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
-  const [track, setTrack] = useState<MusicTrack>(DefaultTrack);
+  const [track, setTrack] = useState<MusicTrack>(DEFAULT_TRACK);
   const [loading, setLoading] = useState(true);
   const { isAuthenticated, musicService } = useSpotifyAuth();
   const { openSheet } = useBottomSheet();
@@ -27,7 +27,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
     async function loadTrack() {
       setLoading(true);
       const returned_track: MusicTrack | null = await service.getTrack(id);
-      setTrack(returned_track || DefaultTrack);
+      setTrack(returned_track || DEFAULT_TRACK);
       setLoading(false);
     }
     loadTrack();
@@ -81,7 +81,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
             onLayout={(event) => setTagRowWidth(event.nativeEvent.layout.width)}
           >
             {tags.slice(0, visibleTagCount).map((tag) => (
-              <Tag key={tag} value={tag} />
+              <Tag key={tag.id} value={tag.name} color={tag.color} />
             ))}
             {tagRowWidth > 0 && visibleTagCount < tags.length && (
               <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>

@@ -1,9 +1,11 @@
 import { Plus, X } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
+import { getContrastingTextColor } from "../utils/color";
 import { ThemedText } from "./default/themed-text";
 
 type TagProps = {
   value: string;
+  color?: string;
   type?: "regular" | "large" | "explicit";
   removeable?: boolean;
   addable?: boolean;
@@ -12,6 +14,7 @@ type TagProps = {
 
 export default function Tag({
   value,
+  color = "#DC2626",
   type,
   removeable,
   addable,
@@ -19,29 +22,41 @@ export default function Tag({
 }: TagProps) {
   const isLarge = type ? type === "large" : false;
   const isExplicit = type === "explicit";
+  const background = isExplicit ? "#777777" : color;
+  const foreground = isExplicit
+    ? "#FFFFFF"
+    : getContrastingTextColor(
+        background,
+        addable ? { opacity: 0.5, surfaceColor: "#202020" } : undefined,
+      );
   return (
     <Pressable
       style={[
         styles.container,
+        { backgroundColor: color },
         isExplicit && styles.explicitContainer,
         addable && styles.addableContainer,
+        addable && { backgroundColor: `${background}80`, borderColor: foreground },
       ]}
       onPress={onPress}
     >
       <ThemedText
         type="tag"
-        style={isLarge ? styles.largeText : isExplicit ? styles.explicitText : styles.text}
+        style={[
+          isLarge ? styles.largeText : isExplicit ? styles.explicitText : styles.text,
+          { color: foreground },
+        ]}
       >
         {value}
       </ThemedText>
       {removeable && (
         <View style={{ paddingHorizontal: 5 }}>
-          <X color="white" size={14} strokeWidth={3} />
+          <X color={foreground} size={14} strokeWidth={3} />
         </View>
       )}
       {addable && (
         <View style={{ paddingHorizontal: 5 }}>
-          <Plus color="white" size={14} strokeWidth={3} />
+          <Plus color={foreground} size={14} strokeWidth={3} />
         </View>
       )}
     </Pressable>
@@ -50,7 +65,6 @@ export default function Tag({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: "red",
     borderRadius: 5,
     alignItems: "center",
     alignSelf: "flex-start",
@@ -59,7 +73,6 @@ const styles = StyleSheet.create({
     maxWidth: "100%",
   },
   addableContainer: {
-    backgroundColor: "rgba(255, 0, 0, 0.5)",
     borderWidth: 2,
     borderStyle: "dashed",
     borderColor: "white",
