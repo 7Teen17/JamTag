@@ -7,9 +7,10 @@ const tagColors = ["#DC2626", "#2563EB", "#16A34A", "#9333EA", "#EA580C"];
 
 const songTagSnapshots = new Map<string, SongTag[]>();
 const songTagListeners = new Map<string, Set<() => void>>();
-const emptyTags: SongTag[] = [];
 const recentlyTaggedSnapshots = new Map<number, string[]>();
 const recentlyTaggedListeners = new Set<() => void>();
+const songsByTagSnapshots = new Map<number, MusicTrack[]>();
+const songsByTagListeners = new Map<number, Set<() => void>>();
 
 export function subscribeRecentlyTagged(listener: () => void) {
   recentlyTaggedListeners.add(listener);
@@ -31,6 +32,20 @@ export function getRecentlyTaggedSongIds(limit = 10) {
     .map((song) => song.id);
 }
 
+export function getSongsByTagsSnapshot(tagID: number) {
+  let songs = songsByTagSnapshots.get(tagID);
+  if (!songs) {
+    songs = getSongsFromTags([tagID]);
+    songsByTagSnapshots.set(tagID, songs);
+  }
+  return songs;
+}
+
+function notifySongsByTagChanged(tagID: number) {
+  songsByTagSnapshots.delete(tagID);
+  songsByTagListeners.get(tagID)?.forEach((listener) => listener());
+}
+
 export function getRecentlyTaggedSnapshot(limit = 10) {
   let songIds = recentlyTaggedSnapshots.get(limit);
   if (!songIds) {
@@ -43,6 +58,19 @@ export function getRecentlyTaggedSnapshot(limit = 10) {
 function notifyRecentlyTaggedChanged() {
   recentlyTaggedSnapshots.clear();
   recentlyTaggedListeners.forEach((listener) => listener());
+}
+
+export function subscribeSongsByTag(tagID: number, listener: () => void) {
+  let listeners = songsByTagListeners.get(tagID);
+  if (!listeners) {
+    listeners = new Set();
+    songsByTagListeners.set(tagID, listeners);
+  }
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) songsByTagListeners.delete(tagID);
+  };
 }
 
 export function subscribeSongTags(songId: string, listener: () => void) {
@@ -58,12 +86,10 @@ export function subscribeSongTags(songId: string, listener: () => void) {
   };
 }
 
-export function getSongTagsSnapshot(songId: string) {
-  if (!songId) return emptyTags;
-  // React needs the same array reference until this song's tags change.
+export function getSongTagsSnapshot(songId: string): SongTag[] {
   let tags = songTagSnapshots.get(songId);
   if (!tags) {
-    tags = getTagsFromSong({ providerTrackId: songId });
+    tags = songId ? getTagsFromSong({ providerTrackId: songId }) : getAllTags();
     songTagSnapshots.set(songId, tags);
   }
   return tags;
@@ -233,6 +259,7 @@ export function createTag(name: string, color?: string): SongTag {
     "INSERT INTO tags (name, color) VALUES (?, ?)",
     [normalizedName, tagColor],
   );
+  notifySongTagsChanged("");
   return {
     id: insertResult.lastInsertRowId,
     name: normalizedName,
@@ -255,6 +282,7 @@ export function deleteTag(tagId: SongTag["id"]) {
       ]);
     });
   });
+  notifySongTagsChanged("");
   songs.forEach(({ song_id }) => notifySongTagsChanged(song_id));
   if (songs.length > 0) notifyRecentlyTaggedChanged();
 }
@@ -288,6 +316,7 @@ export function setTag(
   if (changed) {
     notifySongTagsChanged(song.providerTrackId);
     notifyRecentlyTaggedChanged();
+    notifySongsByTagChanged(tagId);
   }
 }
 

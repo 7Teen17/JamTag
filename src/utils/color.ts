@@ -15,5 +15,5 @@ export function getContrastingTextColor(
     return sum + linear * [0.2126, 0.7152, 0.0722][index];
   }, 0);
 
-  return luminance <= 0.179 ? "#FFFFFF" : "#000000";
+  return luminance <= 0.279 ? "#FFFFFF" : "#000000";
 }

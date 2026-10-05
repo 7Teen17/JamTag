@@ -1,4 +1,4 @@
-import { Plus, X } from "lucide-react-native";
+import { Pencil, Plus, X } from "lucide-react-native";
 import { Pressable, StyleSheet, View } from "react-native";
 import { getContrastingTextColor } from "../utils/color";
 import { ThemedText } from "./default/themed-text";
@@ -9,6 +9,7 @@ type TagProps = {
   type?: "regular" | "large" | "explicit";
   removeable?: boolean;
   addable?: boolean;
+  editable?: boolean;
   onPress?: () => void;
 };
 
@@ -18,6 +19,7 @@ export default function Tag({
   type,
   removeable,
   addable,
+  editable,
   onPress,
 }: TagProps) {
   const isLarge = type ? type === "large" : false;
@@ -36,27 +38,31 @@ export default function Tag({
         { backgroundColor: color },
         isExplicit && styles.explicitContainer,
         addable && styles.addableContainer,
-        addable && { backgroundColor: `${background}80`, borderColor: foreground },
+        addable && {
+          backgroundColor: `${background}80`,
+          borderColor: foreground,
+        },
       ]}
       onPress={onPress}
     >
       <ThemedText
         type="tag"
         style={[
-          isLarge ? styles.largeText : isExplicit ? styles.explicitText : styles.text,
+          isLarge
+            ? styles.largeText
+            : isExplicit
+              ? styles.explicitText
+              : styles.text,
           { color: foreground },
         ]}
       >
         {value}
       </ThemedText>
-      {removeable && (
+      {type == "large" && (
         <View style={{ paddingHorizontal: 5 }}>
-          <X color={foreground} size={14} strokeWidth={3} />
-        </View>
-      )}
-      {addable && (
-        <View style={{ paddingHorizontal: 5 }}>
-          <Plus color={foreground} size={14} strokeWidth={3} />
+          {removeable && <X color={foreground} size={14} strokeWidth={3} />}
+          {addable && <Plus color={foreground} size={14} strokeWidth={3} />}
+          {editable && <Pencil color="white" size={17} />}
         </View>
       )}
     </Pressable>
