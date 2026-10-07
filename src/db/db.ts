@@ -1,3 +1,4 @@
+import * as SecureStore from "expo-secure-store";
 import * as SQLite from "expo-sqlite";
 import type { MusicTrack, SongTag } from "../services/music/types";
 
@@ -11,6 +12,8 @@ const recentlyTaggedSnapshots = new Map<number, string[]>();
 const recentlyTaggedListeners = new Set<() => void>();
 const songsByTagSnapshots = new Map<number, MusicTrack[]>();
 const songsByTagListeners = new Map<number, Set<() => void>>();
+
+const MANAGED_PLAYLIST_KEY = "MANAGED_PLAYLIST";
 
 export function subscribeRecentlyTagged(listener: () => void) {
   recentlyTaggedListeners.add(listener);
@@ -104,11 +107,6 @@ export function setupDB() {
   db.execSync(`
     PRAGMA foreign_keys = ON;
 
-    CREATE TABLE IF NOT EXISTS spotify_playlist (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      playlist_id TEXT NOT NULL
-    );
-
     CREATE TABLE IF NOT EXISTS songs (
       id TEXT PRIMARY KEY,
       provider TEXT NOT NULL,
@@ -138,18 +136,12 @@ export function setupDB() {
   `);
 }
 
-export function getManagedPlaylistId() {
-  return db.getFirstSync<{ playlist_id: string }>(
-    "SELECT playlist_id FROM spotify_playlist WHERE id = 1",
-  )?.playlist_id;
+export async function getManagedPlaylistId() {
+  return SecureStore.getItemAsync(MANAGED_PLAYLIST_KEY);
 }
 
-export function saveManagedPlaylistId(playlistId: string) {
-  db.runSync(
-    `INSERT INTO spotify_playlist (id, playlist_id) VALUES (1, ?)
-     ON CONFLICT(id) DO UPDATE SET playlist_id = excluded.playlist_id`,
-    [playlistId],
-  );
+export async function saveManagedPlaylistId(playlistId: string) {
+  await SecureStore.setItemAsync(MANAGED_PLAYLIST_KEY, playlistId);
 }
 
 export function cacheSong(song: MusicTrack) {
