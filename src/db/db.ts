@@ -285,6 +285,40 @@ export function deleteTag(tagId: SongTag["id"]) {
   if (songs.length > 0) notifyRecentlyTaggedChanged();
 }
 
+export function updateTag(tag: SongTag): void {
+  const name = tag.name.trim().toLowerCase();
+
+  if (!name) {
+    throw new Error("Tag name cannot be empty.");
+  }
+  if (!/^#[0-9a-f]{6}$/i.test(tag.color)) {
+    throw new Error("Tag color must be a six-digit hex color.");
+  }
+
+  const duplicate = db.getFirstSync<{ id: number }>(
+    "SELECT id FROM tags WHERE name = ? AND id != ?",
+    [name, tag.id],
+  );
+  if (duplicate) {
+    throw new Error("A tag with that name already exists.");
+  }
+
+  const result = db.runSync(
+    "UPDATE tags SET name = ?, color = ? WHERE id = ?",
+    [name, tag.color, tag.id],
+  );
+  if (!result.changes) {
+    throw new Error("Tag no longer exists.");
+  }
+
+  const songs = db.getAllSync<{ song_id: string }>(
+    "SELECT song_id FROM song_tags WHERE tag_id = ?",
+    [tag.id],
+  );
+  notifySongTagsChanged("");
+  songs.forEach(({ song_id }) => notifySongTagsChanged(song_id));
+}
+
 export function setTag(
   song: MusicTrack,
   tagId: SongTag["id"],

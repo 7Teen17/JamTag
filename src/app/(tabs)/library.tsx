@@ -1,10 +1,11 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import LibraryTagSection from "@/src/components/LibraryTagSection";
-import { tagColors } from "@/src/db/db";
+import { tagColors, updateTag } from "@/src/db/db";
 import { useSongTags } from "@/src/hooks/useSongTags";
 import { SongTag } from "@/src/services/music/types";
 import { useCallback, useRef, useState } from "react";
 import {
+  Alert,
   Modal,
   Pressable,
   ScrollView,
@@ -24,7 +25,6 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import ColorPicker, {
   ColorFormatsObject,
-  ColorPickerRef,
   HueSlider,
   OpacitySlider,
   Panel1,
@@ -39,11 +39,11 @@ export default function LibraryScreen() {
   const tags = useSongTags();
   const [modalOpen, setModalOpen] = useState(false);
   const [currentTag, setCurrentTag] = useState<SongTag | null>(null);
-  const pickerRef = useRef<ColorPickerRef>(null);
+  const [currentName, setCurrentName] = useState("");
+  const currentColor = useRef("");
 
   const onSelectColor = ({ hex }: ColorFormatsObject) => {
-    "worklet";
-    console.log(hex);
+    currentColor.current = hex;
   };
 
   const { height } = useReanimatedKeyboardAnimation();
@@ -62,11 +62,10 @@ export default function LibraryScreen() {
   const openModal = useCallback(
     (tag: SongTag) => {
       setCurrentTag(tag);
+      setCurrentName(tag.name);
+      currentColor.current = tag.color;
       modalAnimationValue.set(0);
       setModalOpen(true);
-      if (pickerRef.current) {
-        pickerRef.current.setColor(tag.color);
-      }
     },
     [modalAnimationValue],
   );
@@ -82,6 +81,24 @@ export default function LibraryScreen() {
       }),
     );
   }, [modalAnimationValue, finishClosingModal]);
+
+  const applySettings = useCallback(() => {
+    if (!currentTag) return;
+
+    try {
+      updateTag({
+        id: currentTag.id,
+        name: currentName,
+        color: currentColor.current,
+      });
+      closeModal();
+    } catch (error) {
+      Alert.alert(
+        "Couldn't update tag",
+        error instanceof Error ? error.message : "Please try again.",
+      );
+    }
+  }, [currentTag, currentName, closeModal]);
 
   return (
     <>
@@ -114,7 +131,7 @@ export default function LibraryScreen() {
           <Animated.View style={[styles.modal, modalStyle]}>
             <ColorPicker
               value={currentTag ? currentTag.color : "green"}
-              onComplete={onSelectColor}
+              onChangeJS={onSelectColor}
               style={styles.colorPicker}
             >
               <Preview hideInitialColor />
@@ -123,10 +140,16 @@ export default function LibraryScreen() {
               <OpacitySlider />
               <Swatches colors={tagColors} />
             </ColorPicker>
-            <TextInput style={styles.tagInput}>
-              {currentTag ? currentTag.name : ""}
-            </TextInput>
-            <TouchableOpacity style={styles.applyButton} activeOpacity={0.5}>
+            <TextInput
+              style={styles.tagInput}
+              value={currentName}
+              onChangeText={setCurrentName}
+            />
+            <TouchableOpacity
+              style={styles.applyButton}
+              activeOpacity={0.5}
+              onPress={applySettings}
+            >
               <ThemedText
                 style={{
                   flex: 1,

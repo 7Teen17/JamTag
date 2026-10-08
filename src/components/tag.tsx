@@ -15,7 +15,7 @@ type TagProps = {
 
 export default function Tag({
   value,
-  color = "#DC2626",
+  color = "#5b5b5b",
   type,
   removeable,
   addable,
@@ -62,7 +62,7 @@ export default function Tag({
         <View style={{ paddingHorizontal: 5 }}>
           {removeable && <X color={foreground} size={14} strokeWidth={3} />}
           {addable && <Plus color={foreground} size={14} strokeWidth={3} />}
-          {editable && <Pencil color="white" size={17} />}
+          {editable && <Pencil color={foreground} size={17} />}
         </View>
       )}
     </Pressable>
