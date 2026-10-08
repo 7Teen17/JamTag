@@ -4,7 +4,13 @@ import type { MusicTrack, SongTag } from "../services/music/types";
 
 const db = SQLite.openDatabaseSync("music.db");
 
-const tagColors = ["#DC2626", "#2563EB", "#16A34A", "#9333EA", "#EA580C"];
+export const tagColors = [
+  "#DC2626",
+  "#2563EB",
+  "#16A34A",
+  "#9333EA",
+  "#EA580C",
+];
 
 const songTagSnapshots = new Map<string, SongTag[]>();
 const songTagListeners = new Map<string, Set<() => void>>();

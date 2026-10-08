@@ -5,7 +5,12 @@ import {
 } from "@/src/db/db";
 import type { DiscoveryDocument } from "expo-auth-session";
 import { MusicService } from "../music-service";
-import type { MusicTrack, MusicTrackPage, PlaybackState, ServiceProfile } from "../types";
+import type {
+  MusicTrack,
+  MusicTrackPage,
+  PlaybackState,
+  ServiceProfile,
+} from "../types";
 import { DEFAULT_PROFILE } from "../types";
 import { spotifyRequest } from "./spotify-api";
 
@@ -36,7 +41,6 @@ type SpotifyPlaylist = {
 export class SpotifyMusicService extends MusicService {
   readonly id = "spotify";
   readonly displayName = "Spotify";
-
   async getProfile(): Promise<ServiceProfile> {
     const response = await spotifyRequest(this.authSession.accessToken, "/me");
     if (!response) {
@@ -61,7 +65,9 @@ export class SpotifyMusicService extends MusicService {
     }
 
     const uris = [
-      ...new Set(tracks.map((track) => `spotify:track:${track.providerTrackId}`)),
+      ...new Set(
+        tracks.map((track) => `spotify:track:${track.providerTrackId}`),
+      ),
     ];
     const profileResponse = await spotifyRequest(
       this.authSession.accessToken,
@@ -71,7 +77,7 @@ export class SpotifyMusicService extends MusicService {
       throw new Error("Spotify profile lookup failed (204).");
     }
     const { id: accountId } = await profileResponse.json();
-    const savedId = getManagedPlaylistId();
+    const savedId = await getManagedPlaylistId();
     let playlistId: string | undefined;
 
     // Check the library so a removed playlist isn't silently reused.
@@ -94,8 +100,8 @@ export class SpotifyMusicService extends MusicService {
         playlistId = savedId;
         break;
       }
-      playlistId ??= owned.find(
-        (playlist) => playlist?.description?.includes(JAMTAG_MARKER),
+      playlistId ??= owned.find((playlist) =>
+        playlist?.description?.includes(JAMTAG_MARKER),
       )?.id;
       if (!page.next) break;
     }
