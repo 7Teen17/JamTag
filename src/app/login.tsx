@@ -1,11 +1,9 @@
 import { Image } from "expo-image";
-import { useRouter } from "expo-router";
 import { Alert, StyleSheet, TouchableHighlight, View } from "react-native";
 import { ThemedText } from "../components/default/themed-text";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 
 export default function LoginScreen() {
-  const router = useRouter();
   const { isSigningIn, signIn, canSignIn, status, musicService } =
     useSpotifyAuth();
 
@@ -14,11 +12,7 @@ export default function LoginScreen() {
       return;
     }
     try {
-      const response = await signIn();
-
-      if (response) {
-        router.replace("/");
-      }
+      await signIn();
     } catch (error) {
       Alert.alert(
         "Spotify Login Failed",
@@ -29,10 +23,6 @@ export default function LoginScreen() {
     }
   };
 
-  const handleApplePress = async () => {
-    Alert.alert("Apple Login Failed", "Apple Music not implemented yet.");
-  };
-
   return (
     <View style={styles.container}>
       <ThemedText type="title" style={styles.title}>
@@ -40,19 +30,16 @@ export default function LoginScreen() {
       </ThemedText>
       <View style={styles.content}>
         <ThemedText style={styles.subtitle}>
-          Connect a music service to start tagging
+          Connect your Spotify account to start tagging
         </ThemedText>
         <TouchableHighlight
           disabled={!canSignIn}
           accessibilityState={{ disabled: !canSignIn, busy: isSigningIn }}
           onPress={handleSpotifyPress}
-          style={[
-            styles.spotifyButton,
-            !canSignIn && styles.disabledButton,
-          ]}
-          underlayColor="#1db954"
+          style={[styles.spotifyButton, !canSignIn && styles.disabledButton]}
         >
           <View style={styles.buttonContent}>
+            <ThemedText type="defaultSemiBold">Login with </ThemedText>
             <Image
               source={require("@/assets/images/Spotify_White_WText.svg")}
               style={styles.spotifyLogo}
@@ -60,24 +47,6 @@ export default function LoginScreen() {
             />
           </View>
         </TouchableHighlight>
-
-        <TouchableHighlight
-          style={styles.appleButton && styles.disabledButton}
-          underlayColor="#FFFFFF"
-          onPress={handleApplePress}
-        >
-          <View style={styles.buttonContent}>
-            <Image
-              source={require("@/assets/images/newapplemusic.png")}
-              style={styles.appleLogo}
-              contentFit="contain"
-            />
-          </View>
-        </TouchableHighlight>
-        {status === "signedIn" && (
-          <ThemedText>{musicService.displayName} connected</ThemedText>
-        )}
-        {status === "signedOut" && <ThemedText>didnt work</ThemedText>}
       </View>
     </View>
   );
@@ -112,7 +81,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   spotifyButton: {
-    backgroundColor: "#1ED760",
+    backgroundColor: "#1bbc53",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,
@@ -127,18 +96,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   spotifyLogo: {
-    width: 200,
-    height: 25,
-  },
-  appleButton: {
-    backgroundColor: "#FFFFFF",
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
-    marginTop: 18,
-  },
-  appleLogo: {
-    width: 200,
+    width: 90,
     height: 25,
   },
 });

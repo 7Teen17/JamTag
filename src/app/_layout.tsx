@@ -10,6 +10,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 
 import { SpotifyAuthProvider } from "@/src/hooks/auth/SpotifyAuthProvider";
+import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -20,6 +21,31 @@ import { setupDB } from "../db/db";
 export const unstable_settings = {
   anchor: "(tabs)",
 };
+
+function AuthStack() {
+  const { status } = useSpotifyAuth();
+
+  // Wait for saved credentials before choosing which screens are accessible.
+  if (status === "restoring") return null;
+
+  return (
+    <Stack>
+      <Stack.Protected guard={status === "signedIn"}>
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: true,
+            title: "JamTag",
+            headerTitleStyle: { fontFamily: "UrbanistBold" },
+          }}
+        />
+      </Stack.Protected>
+      <Stack.Protected guard={status === "signedOut"}>
+        <Stack.Screen name="login" options={{ headerShown: false }} />
+      </Stack.Protected>
+    </Stack>
+  );
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -54,17 +80,7 @@ export default function RootLayout() {
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
             >
-              <Stack>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{
-                    headerShown: true,
-                    title: "JamTag",
-                    headerTitleStyle: { fontFamily: "UrbanistBold" },
-                  }}
-                />
-                <Stack.Screen name="login" options={{ headerShown: false }} />
-              </Stack>
+              <AuthStack />
               <StatusBar style="auto" />
             </ThemeProvider>
           </BottomSheetModalProvider>

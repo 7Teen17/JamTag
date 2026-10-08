@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 import { useSongTags } from "../hooks/useSongTags";
-import type { PlaybackState, SongTag } from "../services/music/types";
+import type { PlaybackState } from "../services/music/types";
 import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
@@ -80,12 +80,8 @@ export default function NowPlayingCard() {
   }, [status, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  let tags: SongTag[];
-  if (!playback) {
-    tags = [];
-  } else {
-    tags = useSongTags(playback.track.providerTrackId);
-  }
+  const songTags = useSongTags(playback?.track.providerTrackId ?? "");
+  const tags = playback ? songTags : [];
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 5);
 
   return (
