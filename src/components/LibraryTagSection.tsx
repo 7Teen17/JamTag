@@ -14,21 +14,35 @@ export default function LibraryTagSection({ tag }: { tag: SongTag }) {
         <ThemedText type="title">Tagged </ThemedText>
         <Tag value={tag.name} color={tag.color} type="large" editable />
       </View>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.recentItemsScroller}
-        contentContainerStyle={styles.recentItems}
-      >
-        {songs.map((song) => {
-          return (
-            <RecentlyTaggedItem
-              key={song.providerTrackId}
-              id={song.providerTrackId}
-            ></RecentlyTaggedItem>
-          );
-        })}
-      </ScrollView>
+      {songs.length === 0 ? (
+        <View
+          style={{
+            minHeight: 125,
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <ThemedText style={{ color: "#727272" }}>
+            No songs with this tag
+          </ThemedText>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.recentItemsScroller}
+          contentContainerStyle={styles.recentItems}
+        >
+          {songs.map((song) => {
+            return (
+              <RecentlyTaggedItem
+                key={song.providerTrackId}
+                id={song.providerTrackId}
+              ></RecentlyTaggedItem>
+            );
+          })}
+        </ScrollView>
+      )}
       <View
         style={{
           height: 1,

@@ -10,16 +10,24 @@ export default function HomeScreen() {
   return (
     <>
       <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.recentItemsScroller}
-        contentContainerStyle={styles.recentItems}
-      >
-        {recentlyTaggedSongs.map((song) => {
-          return <RecentlyTaggedItem key={song} id={song}></RecentlyTaggedItem>;
-        })}
-      </ScrollView>
+      {recentlyTaggedSongs.length === 0 ? (
+        <View style={{ minHeight: 75, justifyContent: "center" }}>
+          <ThemedText style={styles.noSongText}>No Songs Tagged</ThemedText>
+        </View>
+      ) : (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.recentItemsScroller}
+          contentContainerStyle={styles.recentItems}
+        >
+          {recentlyTaggedSongs.map((song) => {
+            return (
+              <RecentlyTaggedItem key={song} id={song}></RecentlyTaggedItem>
+            );
+          })}
+        </ScrollView>
+      )}
 
       <View style={styles.nowPlayingContainer}>
         <NowPlayingCard></NowPlayingCard>
@@ -38,13 +46,15 @@ const styles = StyleSheet.create({
   recentItems: {
     display: "flex",
     flexDirection: "row",
+    justifyContent: "flex-start",
     paddingLeft: 5,
     paddingRight: 10,
+    flexGrow: 1,
   },
   recentItemsScroller: {
-    width: "100%",
     flexGrow: 0,
     flexShrink: 0,
+    minHeight: 50,
   },
   nowPlayingContainer: {
     padding: 10,
@@ -53,5 +63,10 @@ const styles = StyleSheet.create({
     width: "100%",
     zIndex: 10,
     elevation: 10,
+  },
+  noSongText: {
+    textAlign: "center",
+    marginLeft: 5,
+    color: "#727272",
   },
 });

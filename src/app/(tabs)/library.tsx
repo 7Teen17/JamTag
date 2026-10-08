@@ -36,7 +36,12 @@ export default function LibraryScreen() {
     <>
       <Pressable
         onPress={() => setModalOpen(true)}
-        style={{ width: 100, height: 100 }}
+        style={{
+          width: 150,
+          height: 50,
+          borderRadius: 10,
+          backgroundColor: "green",
+        }}
       />
       <ScrollView>
         {/*Initial Padding*/}
@@ -56,9 +61,7 @@ export default function LibraryScreen() {
           onPress={() => setModalOpen(!modalOpen)}
           style={styles.container}
         >
-          <Animated.View
-            style={styles.modal && { transform: [{ translateY: height }] }}
-          >
+          <Animated.View style={styles.modal}>
             <ColorPicker
               value="green"
               onComplete={onSelectColor}

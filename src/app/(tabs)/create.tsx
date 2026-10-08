@@ -2,8 +2,8 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
-import type { SongTag } from "@/src/services/music/types";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
+import type { SongTag } from "@/src/services/music/types";
 import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
 import { useCallback, useRef, useState } from "react";
@@ -94,7 +94,11 @@ export default function CreateScreen() {
         contentContainerStyle={styles.tagScrollContent}
       >
         {selectedTags.length == 0 ? (
-          <ThemedText>No Tags Selected</ThemedText>
+          <ThemedText
+            style={{ color: "#727272", flex: 1, textAlign: "center" }}
+          >
+            No Tags Selected
+          </ThemedText>
         ) : (
           selectedTags.map((tag) => (
             <Tag
@@ -120,25 +124,35 @@ export default function CreateScreen() {
         style={styles.tagScroll}
         contentContainerStyle={styles.tagScrollContent}
       >
-        {allTags
-          .filter(
-            (tag) =>
-              !selectedTags.some((selected) => selected.id === tag.id) &&
-              (!tagSearch.trim() ||
-                tag.name.toLowerCase().includes(tagSearch.trim().toLowerCase())),
-          )
-          .map((tag) => (
-            <Tag
-              key={tag.id}
-              value={tag.name}
-              color={tag.color}
-              type="large"
-              addable
-              onPress={() => {
-                toggleTag(tag);
-              }}
-            />
-          ))}
+        {allTags.length == 0 ? (
+          <ThemedText
+            style={{ color: "#727272", flex: 1, textAlign: "center" }}
+          >
+            No Tags Available
+          </ThemedText>
+        ) : (
+          allTags
+            .filter(
+              (tag) =>
+                !selectedTags.some((selected) => selected.id === tag.id) &&
+                (!tagSearch.trim() ||
+                  tag.name
+                    .toLowerCase()
+                    .includes(tagSearch.trim().toLowerCase())),
+            )
+            .map((tag) => (
+              <Tag
+                key={tag.id}
+                value={tag.name}
+                color={tag.color}
+                type="large"
+                addable
+                onPress={() => {
+                  toggleTag(tag);
+                }}
+              />
+            ))
+        )}
       </ScrollView>
       {/* Spacer bar */}
       <View
@@ -181,7 +195,7 @@ export default function CreateScreen() {
         <ThemedText type="subtitle" style={styles.sectionNameText}>
           Your Jam
         </ThemedText>
-        <ThemedText>
+        <ThemedText style={{ marginTop: 3 }}>
           {songs.length} {songs.length === 1 ? "Song" : "Songs"} • {duration}
         </ThemedText>
       </View>
@@ -259,6 +273,7 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 10,
     alignItems: "flex-start",
+    flex: 1,
   },
   artistContainer: {
     display: "flex",
