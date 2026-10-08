@@ -355,7 +355,9 @@ export function getSongsFromTags(tagIds: SongTag["id"][]): MusicTrack[] {
           HAVING COUNT(DISTINCT st.tag_id) = ?
         )
       `
-          : ""
+          : `WHERE EXISTS (
+              SELECT 1 FROM song_tags AS st WHERE st.song_id = s.id
+            )`
       }
     `,
     uniqueTagIds.length ? [...uniqueTagIds, uniqueTagIds.length] : [],
