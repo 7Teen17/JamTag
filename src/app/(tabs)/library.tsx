@@ -12,6 +12,8 @@ import {
   View,
 } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
+import { useKeyboardAnimation } from "react-native-keyboard-controller";
+import Animated from "react-native-reanimated";
 import ColorPicker, {
   ColorFormatsObject,
   HueSlider,
@@ -28,6 +30,7 @@ export default function LibraryScreen() {
     "worklet";
     console.log(hex);
   };
+  const { height, progress } = useKeyboardAnimation();
 
   return (
     <>
@@ -53,7 +56,9 @@ export default function LibraryScreen() {
           onPress={() => setModalOpen(!modalOpen)}
           style={styles.container}
         >
-          <View style={styles.modal}>
+          <Animated.View
+            style={styles.modal && { transform: [{ translateY: height }] }}
+          >
             <ColorPicker
               value="green"
               onComplete={onSelectColor}
@@ -78,7 +83,7 @@ export default function LibraryScreen() {
                 Apply
               </ThemedText>
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         </Pressable>
       </Modal>
     </>

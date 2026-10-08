@@ -14,6 +14,7 @@ import { useColorScheme } from "@/src/hooks/use-color-scheme";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import { setupDB } from "../db/db";
 
 export const unstable_settings = {
@@ -47,26 +48,28 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SpotifyAuthProvider>
-        <BottomSheetModalProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
-          >
-            <Stack>
-              <Stack.Screen
-                name="(tabs)"
-                options={{
-                  headerShown: true,
-                  title: "JamTag",
-                  headerTitleStyle: { fontFamily: "UrbanistBold" },
-                }}
-              />
-              <Stack.Screen name="login" options={{ headerShown: false }} />
-            </Stack>
-            <StatusBar style="auto" />
-          </ThemeProvider>
-        </BottomSheetModalProvider>
-      </SpotifyAuthProvider>
+      <KeyboardProvider>
+        <SpotifyAuthProvider>
+          <BottomSheetModalProvider>
+            <ThemeProvider
+              value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
+            >
+              <Stack>
+                <Stack.Screen
+                  name="(tabs)"
+                  options={{
+                    headerShown: true,
+                    title: "JamTag",
+                    headerTitleStyle: { fontFamily: "UrbanistBold" },
+                  }}
+                />
+                <Stack.Screen name="login" options={{ headerShown: false }} />
+              </Stack>
+              <StatusBar style="auto" />
+            </ThemeProvider>
+          </BottomSheetModalProvider>
+        </SpotifyAuthProvider>
+      </KeyboardProvider>
     </GestureHandlerRootView>
   );
 }
