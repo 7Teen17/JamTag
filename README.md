@@ -1,50 +1,32 @@
-# Welcome to your Expo app 👋
+# JamTag
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+JamTag is a mobile app in development for organizing songs with custom tags and creating playlists from the tags you select.
 
-## Get started
+A song can fit more than one playlist. It might be great for a late-night drive, a workout, or a particular mood. JamTag lets you describe those connections with tags, then mix and match them when you want something different to listen to.
 
-1. Install dependencies
 
-   ```bash
-   npm install
-   ```
+Instead of maintaining a separate playlist for every combination of moods and activities, organize your music once and reuse those tags.
 
-2. Start the app
+For example, you could tag songs with:
 
-   ```bash
-   npx expo start
-   ```
+- **Mood:** upbeat, nostalgic, mellow
+- **Activity:** studying, driving, working out
+- **Sound:** acoustic, electronic, instrumental
 
-In the output, you'll find options to open the app in a
+Then select tags to build a playlist around what you feel like hearing. Tags are yours to define rather than limited to a fixed set of categories.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Development status
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+JamTag is actively being developed and is not yet a finished product.
 
-## Get a fresh project
+The interface was designed in Figma. Currently working on the React Native application, Spotify integration, and backend persistence for users' music organization data.
 
-When you're ready, run:
+## Technology
 
-```bash
-npm run reset-project
-```
+- **React Native and TypeScript** — mobile application
+- **Spotify Web API and OAuth** — music integration and account authorization
+- **Figma** — interface design and prototyping
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Feedback
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Ideas and feedback are welcome through GitHub issues. Useful feedback includes how you organize your own music, which tagging interactions would help you, and bugs you encounter while trying the app.
