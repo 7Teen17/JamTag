@@ -1,6 +1,7 @@
-import { ThemedText } from "@/src/components/default/themed-text";
-import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import { useBottomSheet } from "@/src/components/bottomSheetProvider";
+import { ThemedText } from "@/src/components/default/themed-text";
+import Divider from "@/src/components/Divider";
+import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { MusicTrack } from "@/src/services/music/types";
 import { Search } from "lucide-react-native";
@@ -73,73 +74,79 @@ export default function SearchScreen() {
   }, [loadPage, musicService, query]);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.searchBar}>
-        <Search style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchText}
-          placeholder="Search Songs, Artists, Albums"
-          placeholderTextColor="#8D8D8D"
-          accessibilityLabel="Search songs"
-          value={query}
-          onChangeText={(text) => {
-            if (text === query) return;
-            generation.current++;
-            nextOffset.current = null;
-            setTracks([]);
-            setError(null);
-            setLoading(Boolean(musicService && text.trim()));
-            setQuery(text);
+    <>
+      <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
+        • Search
+      </ThemedText>
+      <Divider />
+      <View style={styles.container}>
+        <View style={styles.searchBar}>
+          <Search style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchText}
+            placeholder="Search Songs, Artists, Albums"
+            placeholderTextColor="#8D8D8D"
+            accessibilityLabel="Search songs"
+            value={query}
+            onChangeText={(text) => {
+              if (text === query) return;
+              generation.current++;
+              nextOffset.current = null;
+              setTracks([]);
+              setError(null);
+              setLoading(Boolean(musicService && text.trim()));
+              setQuery(text);
+            }}
+            autoCorrect={false}
+            returnKeyType="search"
+          />
+        </View>
+        <FlatList
+          key={query}
+          data={tracks}
+          contentContainerStyle={
+            !loading && !error && tracks.length === 0
+              ? styles.emptyListContent
+              : undefined
+          }
+          keyExtractor={(track) => track.providerTrackId}
+          renderItem={({ item }) => (
+            <HorizontalSongItem track={item} onPress={openSheet} />
+          )}
+          keyboardShouldPersistTaps="handled"
+          onEndReached={() => {
+            if (!error && nextOffset.current !== null) {
+              void loadPage(nextOffset.current, generation.current);
+            }
           }}
-          autoCorrect={false}
-          returnKeyType="search"
+          onEndReachedThreshold={0.2}
+          ListEmptyComponent={
+            !loading && !error ? (
+              <View style={styles.emptyState}>
+                <Search size={48} color="#8D8D8D" strokeWidth={1.5} />
+                <ThemedText style={styles.emptyStateText}>
+                  Search for Songs
+                </ThemedText>
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            loading ? (
+              <ActivityIndicator />
+            ) : error ? (
+              <ThemedText
+                accessibilityRole="button"
+                onPress={() =>
+                  void loadPage(nextOffset.current ?? 0, generation.current)
+                }
+              >
+                {error} Tap to retry.
+              </ThemedText>
+            ) : null
+          }
         />
       </View>
-      <FlatList
-        key={query}
-        data={tracks}
-        contentContainerStyle={
-          !loading && !error && tracks.length === 0
-            ? styles.emptyListContent
-            : undefined
-        }
-        keyExtractor={(track) => track.providerTrackId}
-        renderItem={({ item }) => (
-          <HorizontalSongItem track={item} onPress={openSheet} />
-        )}
-        keyboardShouldPersistTaps="handled"
-        onEndReached={() => {
-          if (!error && nextOffset.current !== null) {
-            void loadPage(nextOffset.current, generation.current);
-          }
-        }}
-        onEndReachedThreshold={0.2}
-        ListEmptyComponent={
-          !loading && !error ? (
-            <View style={styles.emptyState}>
-              <Search size={48} color="#8D8D8D" strokeWidth={1.5} />
-              <ThemedText style={styles.emptyStateText}>
-                Search for Songs
-              </ThemedText>
-            </View>
-          ) : null
-        }
-        ListFooterComponent={
-          loading ? (
-            <ActivityIndicator />
-          ) : error ? (
-            <ThemedText
-              accessibilityRole="button"
-              onPress={() =>
-                void loadPage(nextOffset.current ?? 0, generation.current)
-              }
-            >
-              {error} Tap to retry.
-            </ThemedText>
-          ) : null
-        }
-      />
-    </View>
+    </>
   );
 }
 

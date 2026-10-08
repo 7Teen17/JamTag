@@ -1,5 +1,5 @@
-import Divider from "@/src/components/Divider";
 import { ThemedText } from "@/src/components/default/themed-text";
+import Divider from "@/src/components/Divider";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
@@ -72,6 +72,10 @@ export default function CreateScreen() {
   }, []);
   return (
     <>
+      <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
+        • Create
+      </ThemedText>
+      <Divider />
       <View style={styles.searchBar}>
         <Search color="white" style={styles.searchIcon} />
         <TextInput

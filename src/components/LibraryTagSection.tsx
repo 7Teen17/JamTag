@@ -1,8 +1,8 @@
-import Divider from "./Divider";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSongsByTag } from "../hooks/useSongsByTag";
 import { SongTag } from "../services/music/types";
 import { ThemedText } from "./default/themed-text";
+import Divider from "./Divider";
 import RecentlyTaggedItem from "./recently-tagged-item";
 import Tag from "./tag";
 
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     marginLeft: 10,
-    marginBottom: 3,
+    marginVertical: 3,
   },
   recentItems: {
     display: "flex",

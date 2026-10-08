@@ -1,4 +1,5 @@
 import { ThemedText } from "@/src/components/default/themed-text";
+import Divider from "@/src/components/Divider";
 import NowPlayingCard from "@/src/components/nowPlayingCard";
 import RecentlyTaggedItem from "@/src/components/recently-tagged-item";
 import { useRecentlyTagged } from "@/src/hooks/useRecentlyTagged";
@@ -9,7 +10,13 @@ export default function HomeScreen() {
 
   return (
     <>
-      <ThemedText style={styles.sectionTitle}>Recently Tagged</ThemedText>
+      <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
+        • Home
+      </ThemedText>
+      <Divider />
+      <ThemedText type="bigText" style={styles.sectionTitle}>
+        Recently Tagged
+      </ThemedText>
       {recentlyTaggedSongs.length === 0 ? (
         <View style={{ minHeight: 75, justifyContent: "center" }}>
           <ThemedText style={styles.noSongText}>No Songs Tagged</ThemedText>
@@ -38,10 +45,8 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   sectionTitle: {
-    fontSize: 25,
-    fontFamily: "UrbanistBold",
-    padding: 10,
-    paddingTop: 20,
+    padding: 5,
+    paddingLeft: 10,
   },
   recentItems: {
     display: "flex",

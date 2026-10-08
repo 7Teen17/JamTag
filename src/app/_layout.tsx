@@ -16,6 +16,7 @@ import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
 import { KeyboardProvider } from "react-native-keyboard-controller";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { setupDB } from "../db/db";
 
 export const unstable_settings = {
@@ -34,9 +35,8 @@ function AuthStack() {
         <Stack.Screen
           name="(tabs)"
           options={{
-            headerShown: true,
+            headerShown: false,
             title: "JamTag",
-            headerTitleStyle: { fontFamily: "UrbanistBold" },
           }}
         />
       </Stack.Protected>
@@ -80,7 +80,12 @@ export default function RootLayout() {
             <ThemeProvider
               value={colorScheme === "dark" ? DarkTheme : DefaultTheme}
             >
-              <AuthStack />
+              <SafeAreaView
+                style={{ flex: 1 }}
+                edges={["top", "left", "right"]}
+              >
+                <AuthStack />
+              </SafeAreaView>
               <StatusBar style="auto" />
             </ThemeProvider>
           </BottomSheetModalProvider>

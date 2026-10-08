@@ -1,4 +1,5 @@
 import { ThemedText } from "@/src/components/default/themed-text";
+import Divider from "@/src/components/Divider";
 import LibraryTagSection from "@/src/components/LibraryTagSection";
 import { tagColors, updateTag } from "@/src/db/db";
 import { useSongTags } from "@/src/hooks/useSongTags";
@@ -102,8 +103,11 @@ export default function LibraryScreen() {
 
   return (
     <>
+      <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
+        • Library
+      </ThemedText>
+      <Divider />
       <ScrollView>
-        <View style={{ height: 15 }} />
         {tags.map((tag) => (
           <LibraryTagSection
             tag={tag}

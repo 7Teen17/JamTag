@@ -1,4 +1,5 @@
 import { ThemedText } from "@/src/components/default/themed-text";
+import Divider from "@/src/components/Divider";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { ServiceProfile } from "@/src/services/music/types";
 import { DEFAULT_PROFILE } from "@/src/services/music/types";
@@ -32,31 +33,37 @@ export default function ProfileScreen() {
     };
   }, [musicService]);
   return (
-    <View style={styles.screen}>
-      <View style={styles.container}>
-        <ThemedText type="title">{profile.username}</ThemedText>
-        <Image
-          source={
-            imageFailed
-              ? DEFAULT_PROFILE.profilePictureSource
-              : (profile.profilePictureSource ??
-                DEFAULT_PROFILE.profilePictureSource)
-          }
-          onError={() => setImageFailed(true)}
-          style={styles.profilePicture}
-        />
-        <ThemedText>
-          {status === "signedIn"
-            ? "Connected to Spotify"
-            : "Not connected to Spotify"}
-        </ThemedText>
-        <TouchableOpacity style={styles.tagButton} activeOpacity={0.5}>
-          <View style={styles.tagButtonContent}>
-            <ThemedText type="subtitle">Log Out</ThemedText>
-          </View>
-        </TouchableOpacity>
+    <>
+      <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
+        • Profile
+      </ThemedText>
+      <Divider />
+      <View style={styles.screen}>
+        <View style={styles.container}>
+          <ThemedText type="title">{profile.username}</ThemedText>
+          <Image
+            source={
+              imageFailed
+                ? DEFAULT_PROFILE.profilePictureSource
+                : (profile.profilePictureSource ??
+                  DEFAULT_PROFILE.profilePictureSource)
+            }
+            onError={() => setImageFailed(true)}
+            style={styles.profilePicture}
+          />
+          <ThemedText>
+            {status === "signedIn"
+              ? "Connected to Spotify"
+              : "Not connected to Spotify"}
+          </ThemedText>
+          <TouchableOpacity style={styles.tagButton} activeOpacity={0.5}>
+            <View style={styles.tagButtonContent}>
+              <ThemedText type="subtitle">Log Out</ThemedText>
+            </View>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+    </>
   );
 }
 
