@@ -1,3 +1,4 @@
+import Divider from "./Divider";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useSongsByTag } from "../hooks/useSongsByTag";
 import { SongTag } from "../services/music/types";
@@ -55,13 +56,7 @@ export default function LibraryTagSection({
           })}
         </ScrollView>
       )}
-      <View
-        style={{
-          height: 1,
-          backgroundColor: "#333",
-          marginVertical: 8,
-        }}
-      />
+      <Divider />
     </>
   );
 }
@@ -71,6 +66,8 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: 10,
+    marginBottom: 3,
   },
   recentItems: {
     display: "flex",

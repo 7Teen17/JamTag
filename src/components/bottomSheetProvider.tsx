@@ -1,3 +1,4 @@
+import Divider from "./Divider";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
@@ -90,13 +91,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
             Edit Tags
           </ThemedText>
           <HorizontalSongItem track={track} />
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "#333",
-              marginVertical: 8,
-            }}
-          />
+          <Divider />
           <View
             style={{
               margin: 5,
@@ -128,13 +123,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
               )}
             </View>
           </View>
-          <View
-            style={{
-              height: 1,
-              backgroundColor: "#333",
-              marginVertical: 8,
-            }}
-          />
+          <Divider />
           {/* Search bar */}
           <View style={styles.searchBar}>
             <Search style={styles.searchIcon}></Search>

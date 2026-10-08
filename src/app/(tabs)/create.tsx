@@ -1,3 +1,4 @@
+import Divider from "@/src/components/Divider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
@@ -155,13 +156,7 @@ export default function CreateScreen() {
         )}
       </ScrollView>
       {/* Spacer bar */}
-      <View
-        style={{
-          height: 1,
-          backgroundColor: "#333",
-          marginVertical: 8,
-        }}
-      />
+      <Divider />
       <View style={styles.artistContainer}>
         <ThemedText type="bigText">Artists</ThemedText>
         <View
@@ -177,13 +172,7 @@ export default function CreateScreen() {
         </View>
       </View>
       {/* Spacer bar */}
-      <View
-        style={{
-          height: 1,
-          backgroundColor: "#333",
-          marginVertical: 8,
-        }}
-      />
+      <Divider />
       <View
         style={{
           display: "flex",
