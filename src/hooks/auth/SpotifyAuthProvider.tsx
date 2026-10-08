@@ -124,7 +124,7 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
   const [tokenResponse, setTokenResponse] = useState<TokenResponse | null>(
     null,
   );
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const [isRestoringAuth, setIsRestoringAuth] = useState(true);
 
   const redirectUri = useMemo(
@@ -204,7 +204,7 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
       throw new Error("Spotify auth request is not ready yet.");
     }
 
-    setIsLoading(true);
+    setIsSigningIn(true);
 
     try {
       const result = await promptAsync();
@@ -239,7 +239,7 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
       setTokenResponse(response);
       return response;
     } finally {
-      setIsLoading(false);
+      setIsSigningIn(false);
     }
   }, [promptAsync, redirectUri, request]);
 
@@ -291,41 +291,35 @@ export function SpotifyAuthProvider({ children }: { children: ReactNode }) {
   }, [clearToken]);
 
   const value = useMemo<SpotifyAuthContextValue>(() => {
+    const signedIn = Boolean(tokenResponse && authSession && musicService);
     const sharedValue = {
-      isLoading,
-      isRestoringAuth,
-      isReady: Boolean(spotifyClientId && request),
-      redirectUri,
+      isSigningIn,
+      canSignIn: Boolean(
+        spotifyClientId && request && !isRestoringAuth && !isSigningIn && !signedIn,
+      ),
       refresh: refreshIfNeeded,
       signIn,
       signOut,
     };
 
-    if (tokenResponse && authSession && musicService) {
+    if (!isRestoringAuth && signedIn && musicService) {
       return {
         ...sharedValue,
-        accessToken: tokenResponse.accessToken,
-        authSession,
-        isAuthenticated: true,
+        status: "signedIn",
         musicService,
-        tokenResponse,
       };
     }
 
     return {
       ...sharedValue,
-      accessToken: null,
-      authSession: null,
-      isAuthenticated: false,
+      status: isRestoringAuth ? "restoring" : "signedOut",
       musicService: null,
-      tokenResponse: null,
     };
   }, [
     authSession,
-    isLoading,
+    isSigningIn,
     isRestoringAuth,
     musicService,
-    redirectUri,
     refreshIfNeeded,
     request,
     signIn,

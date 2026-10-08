@@ -15,11 +15,11 @@ type RecentlyTaggedItemProps = {
 export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
   const [track, setTrack] = useState<MusicTrack>(DEFAULT_TRACK);
   const [loading, setLoading] = useState(true);
-  const { isAuthenticated, musicService } = useSpotifyAuth();
+  const { status, musicService } = useSpotifyAuth();
   const { openSheet } = useBottomSheet();
 
   useEffect(() => {
-    if (!isAuthenticated || !musicService) {
+    if (status !== "signedIn") {
       setLoading(false);
       return;
     }
@@ -31,7 +31,7 @@ export default function RecentlyTaggedItem({ id }: RecentlyTaggedItemProps) {
       setLoading(false);
     }
     loadTrack();
-  }, [id, isAuthenticated, musicService]);
+  }, [id, status, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
   const tags = useSongTags(loading ? "" : track.providerTrackId);

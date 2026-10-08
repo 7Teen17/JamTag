@@ -6,11 +6,11 @@ import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { isLoading, signIn, isReady, isAuthenticated, musicService } =
+  const { isSigningIn, signIn, canSignIn, status, musicService } =
     useSpotifyAuth();
 
   const handleSpotifyPress = async () => {
-    if (isAuthenticated) {
+    if (!canSignIn) {
       return;
     }
     try {
@@ -43,11 +43,12 @@ export default function LoginScreen() {
           Connect a music service to start tagging
         </ThemedText>
         <TouchableHighlight
-          disabled={isLoading || !isReady}
+          disabled={!canSignIn}
+          accessibilityState={{ disabled: !canSignIn, busy: isSigningIn }}
           onPress={handleSpotifyPress}
           style={[
             styles.spotifyButton,
-            (isLoading || isAuthenticated) && styles.disabledButton,
+            !canSignIn && styles.disabledButton,
           ]}
           underlayColor="#1db954"
         >
@@ -73,10 +74,10 @@ export default function LoginScreen() {
             />
           </View>
         </TouchableHighlight>
-        {isAuthenticated && (
+        {status === "signedIn" && (
           <ThemedText>{musicService.displayName} connected</ThemedText>
         )}
-        {!isAuthenticated && <ThemedText>didnt work</ThemedText>}
+        {status === "signedOut" && <ThemedText>didnt work</ThemedText>}
       </View>
     </View>
   );

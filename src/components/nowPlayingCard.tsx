@@ -34,12 +34,12 @@ function getNextPlaybackRefreshDelay(playback: PlaybackState | null) {
 }
 
 export default function NowPlayingCard() {
-  const { isAuthenticated, musicService } = useSpotifyAuth();
+  const { status, musicService } = useSpotifyAuth();
   const [playback, setPlayback] = useState<PlaybackState | null>(null);
   const { openSheet } = useBottomSheet();
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (status !== "signedIn") {
       setPlayback(null);
       return;
     }
@@ -77,7 +77,7 @@ export default function NowPlayingCard() {
         clearTimeout(timeoutId);
       }
     };
-  }, [isAuthenticated, musicService]);
+  }, [status, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
   let tags: SongTag[];

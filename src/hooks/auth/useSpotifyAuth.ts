@@ -2,30 +2,21 @@ import { useContext, createContext } from "react";
 import type { TokenResponse } from "expo-auth-session";
 
 import type { SpotifyMusicService } from "@/src/services/music/providers/spotify";
-import type { MusicAuthSession } from "@/src/services/music/types";
 
 export type SpotifyAuthContextValue = {
-  isLoading: boolean;
-  isRestoringAuth: boolean;
-  isReady: boolean;
-  redirectUri: string;
+  isSigningIn: boolean;
+  canSignIn: boolean;
   refresh: () => Promise<TokenResponse | null>;
   signIn: () => Promise<TokenResponse | null>;
   signOut: () => Promise<void>;
 } & (
   | {
-      accessToken: string;
-      authSession: MusicAuthSession;
-      isAuthenticated: true;
+      status: "signedIn";
       musicService: SpotifyMusicService;
-      tokenResponse: TokenResponse;
     }
   | {
-      accessToken: null;
-      authSession: null;
-      isAuthenticated: false;
+      status: "restoring" | "signedOut";
       musicService: null;
-      tokenResponse: null;
     }
 );
 
