@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSpotifyAuth } from "../hooks/auth/useSpotifyAuth";
-import type { PlaybackState } from "../services/music/types";
+import { useSongTags } from "../hooks/useSongTags";
+import type { PlaybackState, SongTag } from "../services/music/types";
+import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 import { useBottomSheet } from "./bottomSheetProvider";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { useSongTags } from "../hooks/useSongTags";
-import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 const SONG_END_REFRESH_BUFFER_MS = 3000;
 const MAX_PLAYING_REFRESH_MS = 15000;
@@ -80,7 +80,12 @@ export default function NowPlayingCard() {
   }, [isAuthenticated, musicService]);
 
   const [tagRowWidth, setTagRowWidth] = useState(0);
-  const tags = useSongTags(playback?.track.providerTrackId);
+  let tags: SongTag[];
+  if (!playback) {
+    tags = [];
+  } else {
+    tags = useSongTags(playback.track.providerTrackId);
+  }
   const visibleTagCount = getVisibleTagCount(tags, tagRowWidth, 5);
 
   return (
@@ -102,7 +107,9 @@ export default function NowPlayingCard() {
             >
               {playback ? playback.track.artist : "None"}
             </ThemedText>
-            {playback?.track.isExplicit && <Tag type="explicit" value="E"></Tag>}
+            {playback?.track.isExplicit && (
+              <Tag type="explicit" value="E"></Tag>
+            )}
           </View>
           <View
             style={styles.tagRow}
@@ -112,7 +119,11 @@ export default function NowPlayingCard() {
               <Tag key={tag.id} value={tag.name} color={tag.color} />
             ))}
             {tagRowWidth > 0 && visibleTagCount < tags.length && (
-              <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>
+              <ThemedText
+                type="smallText"
+                numberOfLines={1}
+                style={{ flexShrink: 0 }}
+              >
                 +{tags.length - visibleTagCount}
               </ThemedText>
             )}
