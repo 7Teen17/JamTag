@@ -5,14 +5,26 @@ import { ThemedText } from "./default/themed-text";
 import RecentlyTaggedItem from "./recently-tagged-item";
 import Tag from "./tag";
 
-export default function LibraryTagSection({ tag }: { tag: SongTag }) {
+export default function LibraryTagSection({
+  tag,
+  tagOnPress,
+}: {
+  tag: SongTag;
+  tagOnPress: () => void;
+}) {
   const songs = useSongsByTag(tag.id);
 
   return (
     <>
       <View style={styles.headerContainer}>
         <ThemedText type="title">Tagged </ThemedText>
-        <Tag value={tag.name} color={tag.color} type="large" editable />
+        <Tag
+          value={tag.name}
+          color={tag.color}
+          onPress={tagOnPress}
+          type="large"
+          editable
+        />
       </View>
       {songs.length === 0 ? (
         <View
