@@ -115,6 +115,11 @@ export default function LibraryScreen() {
             tagOnPress={() => openModal(tag)}
           ></LibraryTagSection>
         ))}
+        <View style={styles.addMoreContainer}>
+          <ThemedText type="smallText">
+            Newly created tags will show up here
+          </ThemedText>
+        </View>
       </ScrollView>
 
       <Modal
@@ -210,5 +215,11 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     backgroundColor: "#3FA46B",
+  },
+  addMoreContainer: {
+    flex: 1,
+    minHeight: 100,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
