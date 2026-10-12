@@ -370,16 +370,21 @@ export function getAllTags() {
   );
 }
 
-export function getSongsFromTags(tagIds: SongTag["id"][]): MusicTrack[] {
-  const uniqueTagIds = [...new Set(tagIds)];
-  const placeholders = uniqueTagIds.map(() => "?").join(", ");
+export function getSongsFromTags(
+  includedTagIDs: SongTag["id"][],
+  excludedTagIDs: SongTag["id"][] = [],
+): MusicTrack[] {
+  const uniqueIncludedTagIds = [...new Set(includedTagIDs)];
+  const uniqueExcludedTagIds = [...new Set(excludedTagIDs)];
+  const placeholders = uniqueIncludedTagIds.map(() => "?").join(", ");
+  const excludedPlaceholders = uniqueExcludedTagIds.map(() => "?").join(", ");
   const songs = db.getAllSync<MusicTrack>(
     `
       SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album,
         s.artwork_url AS artworkUrl, s.durationMs, s.isrc, s.is_explicit AS isExplicit
       FROM songs AS s
       ${
-        uniqueTagIds.length
+        uniqueIncludedTagIds.length
           ? `
         WHERE s.id IN (
           SELECT st.song_id
@@ -393,8 +398,22 @@ export function getSongsFromTags(tagIds: SongTag["id"][]): MusicTrack[] {
               SELECT 1 FROM song_tags AS st WHERE st.song_id = s.id
             )`
       }
+      ${
+        uniqueExcludedTagIds.length
+          ? `AND NOT EXISTS (
+              SELECT 1 FROM song_tags AS st
+              WHERE st.song_id = s.id
+                AND st.tag_id IN (${excludedPlaceholders})
+            )`
+          : ""
+      }
     `,
-    uniqueTagIds.length ? [...uniqueTagIds, uniqueTagIds.length] : [],
+    [
+      ...(uniqueIncludedTagIds.length
+        ? [...uniqueIncludedTagIds, uniqueIncludedTagIds.length]
+        : []),
+      ...uniqueExcludedTagIds,
+    ],
   );
 
   return songs.map((song) => ({

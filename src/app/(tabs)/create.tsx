@@ -7,7 +7,7 @@ import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { SongTag } from "@/src/services/music/types";
 import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
-import { useCallback, useRef, useState } from "react";
+import { type ReactNode, useCallback, useRef, useState } from "react";
 import {
   Alert,
   Linking,
@@ -21,6 +21,8 @@ import { ScrollView } from "react-native-gesture-handler";
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
+  const [excludedTags, setExcludedTags] = useState<SongTag[]>([]);
+  const [tagMode, setTagMode] = useState<"include" | "exclude">("include");
   const [allTags, setAllTags] = useState<SongTag[]>([]);
   const { musicService, refresh } = useSpotifyAuth();
   const [isExporting, setIsExporting] = useState(false);
@@ -32,7 +34,10 @@ export default function CreateScreen() {
     }, []),
   );
 
-  const songs = getSongsFromTags(selectedTags.map((tag) => tag.id));
+  const songs = getSongsFromTags(
+    selectedTags.map((tag) => tag.id),
+    excludedTags.map((tag) => tag.id),
+  );
   const totalMinutes = Math.floor(
     songs.reduce((total, song) => total + (song.durationMs ?? 0), 0) / 60000,
   );
@@ -62,8 +67,17 @@ export default function CreateScreen() {
     }
   }
 
-  const toggleTag = useCallback((tag: SongTag) => {
+  const toggleSelectedTag = useCallback((tag: SongTag) => {
     setSelectedTags((tags) =>
+      tags.some((eachTag) => eachTag.id === tag.id)
+        ? tags.filter((eachTag) => eachTag.id !== tag.id)
+        : [...tags, tag],
+    );
+    setTagSearch("");
+  }, []);
+
+  const toggleExcludedTag = useCallback((tag: SongTag) => {
+    setExcludedTags((tags) =>
       tags.some((eachTag) => eachTag.id === tag.id)
         ? tags.filter((eachTag) => eachTag.id !== tag.id)
         : [...tags, tag],
@@ -88,77 +102,56 @@ export default function CreateScreen() {
           placeholderTextColor="#8D8D8D"
         />
       </View>
-      {/* Selected Tags Section */}
-      <ThemedText style={styles.sectionNameText} type="bigText">
-        Selected Tags
-      </ThemedText>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tagScroll}
-        contentContainerStyle={styles.tagScrollContent}
-      >
-        {selectedTags.length == 0 ? (
-          <ThemedText
-            style={{ color: "#727272", flex: 1, textAlign: "center" }}
-          >
-            No Tags Selected
-          </ThemedText>
-        ) : (
-          selectedTags.map((tag) => (
-            <Tag
-              key={tag.id}
-              value={tag.name}
-              color={tag.color}
-              type="large"
-              removeable
-              onPress={() => {
-                toggleTag(tag);
-              }}
-            />
-          ))
+      <TagRow
+        title="Selected Tags"
+        tags={selectedTags}
+        emptyText="No Tags Selected"
+        onTagPress={toggleSelectedTag}
+      />
+      <TagRow
+        title="Excluded Tags"
+        tags={excludedTags}
+        emptyText="No Tags Excluded"
+        onTagPress={toggleExcludedTag}
+      />
+      <TagRow
+        title="More Tags"
+        headerAction={
+          <View style={styles.tagModeToggle}>
+            {(["include", "exclude"] as const).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                accessibilityRole="button"
+                accessibilityLabel={
+                  mode === "include" ? "Include tags" : "Exclude tags"
+                }
+                accessibilityState={{ selected: tagMode === mode }}
+                style={[
+                  styles.tagModeButton,
+                  tagMode === mode && styles.tagModeButtonSelected,
+                ]}
+                onPress={() => setTagMode(mode)}
+              >
+                <ThemedText>
+                  {mode === "include" ? "Include" : "Exclude"}
+                </ThemedText>
+              </TouchableOpacity>
+            ))}
+          </View>
+        }
+        tags={allTags.filter(
+          (tag) =>
+            !selectedTags.some((selected) => selected.id === tag.id) &&
+            !excludedTags.some((excluded) => excluded.id === tag.id) &&
+            (!tagSearch.trim() ||
+              tag.name.toLowerCase().includes(tagSearch.trim().toLowerCase())),
         )}
-      </ScrollView>
-      {/* Suggested Tags Section */}
-      <ThemedText style={styles.sectionNameText} type="bigText">
-        More Tags
-      </ThemedText>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tagScroll}
-        contentContainerStyle={styles.tagScrollContent}
-      >
-        {allTags.length == 0 ? (
-          <ThemedText
-            style={{ color: "#727272", flex: 1, textAlign: "center" }}
-          >
-            No Tags Available
-          </ThemedText>
-        ) : (
-          allTags
-            .filter(
-              (tag) =>
-                !selectedTags.some((selected) => selected.id === tag.id) &&
-                (!tagSearch.trim() ||
-                  tag.name
-                    .toLowerCase()
-                    .includes(tagSearch.trim().toLowerCase())),
-            )
-            .map((tag) => (
-              <Tag
-                key={tag.id}
-                value={tag.name}
-                color={tag.color}
-                type="large"
-                addable
-                onPress={() => {
-                  toggleTag(tag);
-                }}
-              />
-            ))
-        )}
-      </ScrollView>
+        emptyText="No Tags Available"
+        addable
+        onTagPress={
+          tagMode === "include" ? toggleSelectedTag : toggleExcludedTag
+        }
+      />
       {/* Spacer bar */}
       <Divider />
       <View style={styles.artistContainer}>
@@ -250,6 +243,29 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginVertical: 5,
   },
+  tagRowHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: 8,
+    paddingRight: 10,
+  },
+  tagModeToggle: {
+    flexDirection: "row",
+    backgroundColor: "#272727",
+    borderRadius: 8,
+    padding: 3,
+  },
+  tagModeButton: {
+    minHeight: 22,
+    justifyContent: "center",
+    paddingHorizontal: 12,
+    borderRadius: 5,
+  },
+  tagModeButtonSelected: {
+    backgroundColor: "#3FA46B",
+  },
   tagContainer: {
     display: "flex",
     flexDirection: "row",
@@ -258,6 +274,7 @@ const styles = StyleSheet.create({
     margin: 10,
   },
   tagScroll: {
+    minHeight: 36,
     flexGrow: 0,
     flexShrink: 0,
     marginVertical: 10,
@@ -285,3 +302,56 @@ const styles = StyleSheet.create({
     backgroundColor: "#3FA46B",
   },
 });
+
+function TagRow({
+  title,
+  tags,
+  emptyText,
+  addable = false,
+  headerAction,
+  onTagPress,
+}: {
+  title: string;
+  tags: SongTag[];
+  emptyText: string;
+  addable?: boolean;
+  headerAction?: ReactNode;
+  onTagPress: (tag: SongTag) => void;
+}) {
+  return (
+    <>
+      <View style={styles.tagRowHeader}>
+        <ThemedText style={styles.sectionNameText} type="bigText">
+          {title}
+        </ThemedText>
+        {headerAction}
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tagScroll}
+        contentContainerStyle={styles.tagScrollContent}
+      >
+        {tags.length === 0 ? (
+          <ThemedText
+            style={{ color: "#727272", flex: 1, textAlign: "center" }}
+          >
+            {emptyText}
+          </ThemedText>
+        ) : (
+          tags.map((tag) => (
+            <Tag
+              key={tag.id}
+              value={tag.name}
+              color={tag.color}
+              type="large"
+              addable={addable}
+              removeable={!addable}
+              onPress={() => onTagPress(tag)}
+            />
+          ))
+        )}
+      </ScrollView>
+    </>
+  );
+}
