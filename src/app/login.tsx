@@ -30,7 +30,7 @@ export default function LoginScreen() {
       </ThemedText>
       <View style={styles.content}>
         <ThemedText style={styles.subtitle}>
-          Connect your Spotify account to start tagging
+          Connect your account to start tagging
         </ThemedText>
         <TouchableHighlight
           disabled={!canSignIn}

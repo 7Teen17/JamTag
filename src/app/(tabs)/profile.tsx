@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
 
 export default function ProfileScreen() {
-  const { status, musicService } = useSpotifyAuth();
+  const { status, musicService, signOut } = useSpotifyAuth();
   const [profile, setProfile] = useState<ServiceProfile>(DEFAULT_PROFILE);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -56,7 +56,11 @@ export default function ProfileScreen() {
               ? "Connected to Spotify"
               : "Not connected to Spotify"}
           </ThemedText>
-          <TouchableOpacity style={styles.tagButton} activeOpacity={0.5}>
+          <TouchableOpacity
+            style={styles.tagButton}
+            activeOpacity={0.5}
+            onPress={signOut}
+          >
             <View style={styles.tagButtonContent}>
               <ThemedText type="subtitle">Log Out</ThemedText>
             </View>
