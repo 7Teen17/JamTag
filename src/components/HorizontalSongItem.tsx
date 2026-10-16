@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  Keyboard,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { useSongTags } from "../hooks/useSongTags";
 import { MusicTrack } from "../services/music/types";
+import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
-import { useSongTags } from "../hooks/useSongTags";
-import { getVisibleTagCount } from "../utils/getVisibleTagCount";
 
 type HorizontalSongItemProps = {
   track: MusicTrack;
@@ -57,7 +63,11 @@ export default function HorizontalSongItem({
             <Tag key={tag.id} value={tag.name} color={tag.color} />
           ))}
           {tagRowWidth > 0 && visibleTagCount < tags.length && (
-            <ThemedText type="smallText" numberOfLines={1} style={{ flexShrink: 0 }}>
+            <ThemedText
+              type="smallText"
+              numberOfLines={1}
+              style={{ flexShrink: 0 }}
+            >
               +{tags.length - visibleTagCount}
             </ThemedText>
           )}
@@ -69,7 +79,10 @@ export default function HorizontalSongItem({
   return onPress ? (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => onPress(track)}
+      onPress={() => {
+        Keyboard.dismiss();
+        onPress(track);
+      }}
       accessibilityRole="button"
     >
       {content}
