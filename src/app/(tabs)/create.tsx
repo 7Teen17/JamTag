@@ -132,7 +132,7 @@ export default function CreateScreen() {
                 ]}
                 onPress={() => setTagMode(mode)}
               >
-                <ThemedText>
+                <ThemedText type="tag" style={{ fontSize: 18 }}>
                   {mode === "include" ? "Include" : "Exclude"}
                 </ThemedText>
               </TouchableOpacity>
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
     padding: 3,
   },
   tagModeButton: {
-    minHeight: 22,
+    minHeight: 28,
     justifyContent: "center",
     paddingHorizontal: 12,
     borderRadius: 5,
