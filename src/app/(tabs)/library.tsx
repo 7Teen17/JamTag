@@ -1,9 +1,10 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import Divider from "@/src/components/Divider";
 import LibraryTagSection from "@/src/components/LibraryTagSection";
-import { tagColors, updateTag } from "@/src/db/db";
+import { createTag, tagColors, updateTag } from "@/src/db/db";
 import { useSongTags } from "@/src/hooks/useSongTags";
 import { SongTag } from "@/src/services/music/types";
+import { Plus } from "lucide-react-native";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -87,11 +88,15 @@ export default function LibraryScreen() {
     if (!currentTag) return;
 
     try {
-      updateTag({
-        id: currentTag.id,
-        name: currentName,
-        color: currentColor.current,
-      });
+      if (currentTag.id === -1) {
+        createTag(currentName, currentColor.current);
+      } else {
+        updateTag({
+          id: currentTag.id,
+          name: currentName,
+          color: currentColor.current,
+        });
+      }
       closeModal();
     } catch (error) {
       Alert.alert(
@@ -107,6 +112,15 @@ export default function LibraryScreen() {
         • Library
       </ThemedText>
       <Divider />
+      <View>
+        <TouchableOpacity
+          style={styles.createTagButton}
+          onPress={() => openModal({ id: -1, name: "", color: "#3FA46B" })}
+        >
+          <ThemedText type="subtitle">Create Tag</ThemedText>
+          <Plus color="white" style={{ marginLeft: 3 }} />
+        </TouchableOpacity>
+      </View>
       <ScrollView>
         {tags.map((tag) => (
           <LibraryTagSection
@@ -221,5 +235,14 @@ const styles = StyleSheet.create({
     minHeight: 100,
     justifyContent: "center",
     alignItems: "center",
+  },
+  createTagButton: {
+    display: "flex",
+    flexDirection: "row",
+    backgroundColor: "#3FA46B",
+    borderRadius: 10,
+    padding: 8,
+    alignSelf: "flex-end",
+    marginRight: 5,
   },
 });
