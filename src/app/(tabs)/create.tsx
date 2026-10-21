@@ -38,6 +38,7 @@ export default function CreateScreen() {
   const songs = getSongsFromTags(
     selectedTags.map((tag) => tag.id),
     excludedTags.map((tag) => tag.id),
+    anyOfTags.map((tag) => tag.id),
   );
   const moreTags = allTags.filter(
     (tag) =>

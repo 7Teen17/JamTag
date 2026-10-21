@@ -373,11 +373,14 @@ export function getAllTags() {
 export function getSongsFromTags(
   includedTagIDs: SongTag["id"][],
   excludedTagIDs: SongTag["id"][] = [],
+  anyOfTagIDs: SongTag["id"][] = [],
 ): MusicTrack[] {
   const uniqueIncludedTagIds = [...new Set(includedTagIDs)];
   const uniqueExcludedTagIds = [...new Set(excludedTagIDs)];
+  const uniqueAnyOfTagIds = [...new Set(anyOfTagIDs)];
   const placeholders = uniqueIncludedTagIds.map(() => "?").join(", ");
   const excludedPlaceholders = uniqueExcludedTagIds.map(() => "?").join(", ");
+  const anyOfPlaceholders = uniqueAnyOfTagIds.map(() => "?").join(", ");
   const songs = db.getAllSync<MusicTrack>(
     `
       SELECT s.id AS providerTrackId, s.provider, s.title, s.artist, s.album,
@@ -399,6 +402,15 @@ export function getSongsFromTags(
             )`
       }
       ${
+        uniqueAnyOfTagIds.length
+          ? `AND EXISTS (
+              SELECT 1 FROM song_tags AS st
+              WHERE st.song_id = s.id
+                AND st.tag_id IN (${anyOfPlaceholders})
+            )`
+          : ""
+      }
+      ${
         uniqueExcludedTagIds.length
           ? `AND NOT EXISTS (
               SELECT 1 FROM song_tags AS st
@@ -412,6 +424,7 @@ export function getSongsFromTags(
       ...(uniqueIncludedTagIds.length
         ? [...uniqueIncludedTagIds, uniqueIncludedTagIds.length]
         : []),
+      ...uniqueAnyOfTagIds,
       ...uniqueExcludedTagIds,
     ],
   );
