@@ -7,7 +7,7 @@ import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { SongTag } from "@/src/services/music/types";
 import { useFocusEffect } from "expo-router";
 import { ChevronRight, Search } from "lucide-react-native";
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Linking,
@@ -21,8 +21,9 @@ import { ScrollView } from "react-native-gesture-handler";
 export default function CreateScreen() {
   const [tagSearch, setTagSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
+  const [anyOfTags, setAnyOfTags] = useState<SongTag[]>([]);
   const [excludedTags, setExcludedTags] = useState<SongTag[]>([]);
-  const [tagMode, setTagMode] = useState<"include" | "exclude">("include");
+  const [tagMode, setTagMode] = useState<"all" | "any" | "none">("all");
   const [allTags, setAllTags] = useState<SongTag[]>([]);
   const { musicService, refresh } = useSpotifyAuth();
   const [isExporting, setIsExporting] = useState(false);
@@ -37,6 +38,14 @@ export default function CreateScreen() {
   const songs = getSongsFromTags(
     selectedTags.map((tag) => tag.id),
     excludedTags.map((tag) => tag.id),
+  );
+  const moreTags = allTags.filter(
+    (tag) =>
+      !selectedTags.some((selected) => selected.id === tag.id) &&
+      !anyOfTags.some((selected) => selected.id === tag.id) &&
+      !excludedTags.some((excluded) => excluded.id === tag.id) &&
+      (!tagSearch.trim() ||
+        tag.name.toLowerCase().includes(tagSearch.trim().toLowerCase())),
   );
   const totalMinutes = Math.floor(
     songs.reduce((total, song) => total + (song.durationMs ?? 0), 0) / 60000,
@@ -84,6 +93,21 @@ export default function CreateScreen() {
     );
     setTagSearch("");
   }, []);
+
+  const toggleAnyOfTag = useCallback((tag: SongTag) => {
+    setAnyOfTags((tags) =>
+      tags.some((eachTag) => eachTag.id === tag.id)
+        ? tags.filter((eachTag) => eachTag.id !== tag.id)
+        : [...tags, tag],
+    );
+    setTagSearch("");
+  }, []);
+
+  const addTag = {
+    all: toggleSelectedTag,
+    any: toggleAnyOfTag,
+    none: toggleExcludedTag,
+  }[tagMode];
   return (
     <>
       <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
@@ -103,28 +127,44 @@ export default function CreateScreen() {
         />
       </View>
       <TagRow
-        title="Selected Tags"
+        title="All Of"
         tags={selectedTags}
         emptyText="No Tags Selected"
         onTagPress={toggleSelectedTag}
       />
       <TagRow
-        title="Excluded Tags"
+        title="Any Of"
+        tags={anyOfTags}
+        emptyText="No Tags Selected"
+        onTagPress={toggleAnyOfTag}
+      />
+      <TagRow
+        title="None Of"
         tags={excludedTags}
         emptyText="No Tags Excluded"
         onTagPress={toggleExcludedTag}
       />
-      <TagRow
-        title="More Tags"
-        headerAction={
+      <Divider />
+
+      {/*More Tags Section */}
+      <View style={styles.moreTagsHeader}>
+        <ThemedText style={styles.sectionNameText} type="bigText">
+          More Tags
+        </ThemedText>
+        <View style={styles.addToControl}>
+          <ThemedText>Add to</ThemedText>
           <View style={styles.tagModeToggle}>
-            {(["include", "exclude"] as const).map((mode) => (
+            {(
+              [
+                { mode: "all", label: "All Of" },
+                { mode: "any", label: "Any Of" },
+                { mode: "none", label: "None Of" },
+              ] as const
+            ).map(({ mode, label }) => (
               <TouchableOpacity
                 key={mode}
                 accessibilityRole="button"
-                accessibilityLabel={
-                  mode === "include" ? "Include tags" : "Exclude tags"
-                }
+                accessibilityLabel={`Add tags to ${label}`}
                 accessibilityState={{ selected: tagMode === mode }}
                 style={[
                   styles.tagModeButton,
@@ -132,26 +172,39 @@ export default function CreateScreen() {
                 ]}
                 onPress={() => setTagMode(mode)}
               >
-                <ThemedText type="tag" style={{ fontSize: 18 }}>
-                  {mode === "include" ? "Include" : "Exclude"}
+                <ThemedText type="tag" style={styles.tagModeText}>
+                  {label}
                 </ThemedText>
               </TouchableOpacity>
             ))}
           </View>
-        }
-        tags={allTags.filter(
-          (tag) =>
-            !selectedTags.some((selected) => selected.id === tag.id) &&
-            !excludedTags.some((excluded) => excluded.id === tag.id) &&
-            (!tagSearch.trim() ||
-              tag.name.toLowerCase().includes(tagSearch.trim().toLowerCase())),
+        </View>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tagScroll}
+        contentContainerStyle={styles.tagScrollContent}
+      >
+        {moreTags.length === 0 ? (
+          <ThemedText
+            style={{ color: "#727272", flex: 1, textAlign: "center" }}
+          >
+            No Tags Available
+          </ThemedText>
+        ) : (
+          moreTags.map((tag) => (
+            <Tag
+              key={tag.id}
+              value={tag.name}
+              color={tag.color}
+              type="large"
+              addable
+              onPress={() => addTag(tag)}
+            />
+          ))
         )}
-        emptyText="No Tags Available"
-        addable
-        onTagPress={
-          tagMode === "include" ? toggleSelectedTag : toggleExcludedTag
-        }
-      />
+      </ScrollView>
       {/* Spacer bar */}
       <Divider />
       <View style={styles.artistContainer}>
@@ -243,7 +296,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginVertical: 5,
   },
-  tagRowHeader: {
+  moreTagsHeader: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -251,27 +304,52 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingRight: 10,
   },
+  addToControl: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
   tagModeToggle: {
     flexDirection: "row",
     backgroundColor: "#272727",
     borderRadius: 8,
-    padding: 3,
+    padding: 2,
   },
   tagModeButton: {
-    minHeight: 28,
+    minHeight: 26,
     justifyContent: "center",
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     borderRadius: 5,
   },
   tagModeButtonSelected: {
     backgroundColor: "#3FA46B",
   },
-  tagContainer: {
-    display: "flex",
+  tagModeText: {
+    fontSize: 14,
+  },
+  tagRow: {
     flexDirection: "row",
-    flexWrap: "nowrap",
+    alignItems: "center",
+    height: 44,
+    flexShrink: 0,
+  },
+  tagRowName: {
+    width: 90,
+    paddingLeft: 10,
+    paddingRight: 8,
+    fontSize: 14,
+  },
+  tagRowScroll: {
+    flex: 1,
+  },
+  tagRowScrollContent: {
+    alignItems: "center",
+    flexGrow: 1,
     gap: 8,
-    margin: 10,
+    paddingHorizontal: 10,
+  },
+  emptyTagsText: {
+    color: "#727272",
   },
   tagScroll: {
     minHeight: 36,
@@ -282,7 +360,7 @@ const styles = StyleSheet.create({
   tagScrollContent: {
     gap: 8,
     paddingHorizontal: 10,
-    alignItems: "flex-start",
+    alignItems: "center",
     flex: 1,
   },
   artistContainer: {
@@ -307,37 +385,26 @@ function TagRow({
   title,
   tags,
   emptyText,
-  addable = false,
-  headerAction,
   onTagPress,
 }: {
   title: string;
   tags: SongTag[];
   emptyText: string;
-  addable?: boolean;
-  headerAction?: ReactNode;
   onTagPress: (tag: SongTag) => void;
 }) {
   return (
-    <>
-      <View style={styles.tagRowHeader}>
-        <ThemedText style={styles.sectionNameText} type="bigText">
-          {title}
-        </ThemedText>
-        {headerAction}
-      </View>
+    <View style={styles.tagRow}>
+      <ThemedText style={styles.tagRowName} type="bigText">
+        {title}
+      </ThemedText>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        style={styles.tagScroll}
-        contentContainerStyle={styles.tagScrollContent}
+        style={styles.tagRowScroll}
+        contentContainerStyle={styles.tagRowScrollContent}
       >
         {tags.length === 0 ? (
-          <ThemedText
-            style={{ color: "#727272", flex: 1, textAlign: "center" }}
-          >
-            {emptyText}
-          </ThemedText>
+          <ThemedText style={styles.emptyTagsText}>{emptyText}</ThemedText>
         ) : (
           tags.map((tag) => (
             <Tag
@@ -345,13 +412,12 @@ function TagRow({
               value={tag.name}
               color={tag.color}
               type="large"
-              addable={addable}
-              removeable={!addable}
+              removeable
               onPress={() => onTagPress(tag)}
             />
           ))
         )}
       </ScrollView>
-    </>
+    </View>
   );
 }
