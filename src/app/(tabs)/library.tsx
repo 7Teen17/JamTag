@@ -1,7 +1,7 @@
 import { ThemedText } from "@/src/components/default/themed-text";
 import Divider from "@/src/components/Divider";
 import LibraryTagSection from "@/src/components/LibraryTagSection";
-import { createTag, tagColors, updateTag } from "@/src/db/db";
+import { createTag, deleteTag, tagColors, updateTag } from "@/src/db/db";
 import { useSongTags } from "@/src/hooks/useSongTags";
 import { SongTag } from "@/src/services/music/types";
 import { Plus } from "lucide-react-native";
@@ -43,6 +43,7 @@ export default function LibraryScreen() {
   const [currentTag, setCurrentTag] = useState<SongTag | null>(null);
   const [currentName, setCurrentName] = useState("");
   const currentColor = useRef("");
+  const isNewTag = currentTag?.id === -1;
 
   const onSelectColor = ({ hex }: ColorFormatsObject) => {
     currentColor.current = hex;
@@ -106,6 +107,33 @@ export default function LibraryScreen() {
     }
   }, [currentTag, currentName, closeModal]);
 
+  const confirmDeleteTag = useCallback(() => {
+    if (!currentTag || currentTag.id === -1) return;
+
+    Alert.alert(
+      `Delete “${currentTag.name}”?`,
+      "This removes the tag from all songs. Your songs will stay in your library. This can’t be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            try {
+              deleteTag(currentTag.id);
+              closeModal();
+            } catch (error) {
+              Alert.alert(
+                "Couldn't delete tag",
+                error instanceof Error ? error.message : "Please try again.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  }, [currentTag, closeModal]);
+
   return (
     <>
       <ThemedText type="title" style={{ fontSize: 40, paddingLeft: 10 }}>
@@ -168,6 +196,23 @@ export default function LibraryScreen() {
               value={currentName}
               onChangeText={setCurrentName}
             />
+            {currentTag && !isNewTag && (
+              <TouchableOpacity
+                style={styles.deleteButton}
+                activeOpacity={0.5}
+                onPress={confirmDeleteTag}
+                accessibilityRole="button"
+              >
+                <ThemedText
+                  style={{
+                    textAlign: "center",
+                  }}
+                  type="subtitle"
+                >
+                  Delete Tag
+                </ThemedText>
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={styles.applyButton}
               activeOpacity={0.5}
@@ -175,9 +220,7 @@ export default function LibraryScreen() {
             >
               <ThemedText
                 style={{
-                  flex: 1,
                   textAlign: "center",
-                  textAlignVertical: "center",
                 }}
                 type="subtitle"
               >
@@ -206,29 +249,36 @@ const styles = StyleSheet.create({
   },
   modal: {
     width: 300,
-    height: 500,
     backgroundColor: "white",
     borderRadius: 25,
     padding: 20,
+    gap: 12,
   },
   colorPicker: {
     gap: 10,
   },
   tagInput: {
     backgroundColor: "#e5e3e3",
-    height: "10%",
+    minHeight: 50,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     fontFamily: "UrbanistRegular",
     fontSize: 20,
     borderRadius: 5,
   },
   applyButton: {
-    position: "absolute",
-    bottom: 15,
-    left: 15,
-    right: 15,
+    minHeight: 44,
+    justifyContent: "center",
     padding: 10,
     borderRadius: 10,
     backgroundColor: "#3FA46B",
+  },
+  deleteButton: {
+    minHeight: 44,
+    justifyContent: "center",
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: "#a4463f",
   },
   addMoreContainer: {
     flex: 1,
