@@ -206,8 +206,10 @@ export default function LibraryScreen() {
                 <ThemedText
                   style={{
                     textAlign: "center",
+                    color: "#a4463f",
+                    fontFamily: "UrbanistBold",
                   }}
-                  type="subtitle"
+                  type="defaultSemiBold"
                 >
                   Delete Tag
                 </ThemedText>
@@ -274,11 +276,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#3FA46B",
   },
   deleteButton: {
-    minHeight: 44,
     justifyContent: "center",
     padding: 10,
     borderRadius: 10,
-    backgroundColor: "#a4463f",
+    borderWidth: 1,
+    borderColor: "#a4463f",
   },
   addMoreContainer: {
     flex: 1,
