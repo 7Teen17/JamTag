@@ -169,8 +169,11 @@ export class SpotifyMusicService extends MusicService {
       isExplicit: result.item.explicit,
     };
 
+    const resolvedTrack =
+      getCachedSong(track.providerTrackId, track.isrc) ?? track;
+
     return {
-      track,
+      track: resolvedTrack,
       isPlaying: result.is_playing,
       progressMs: result.progress_ms,
     };
