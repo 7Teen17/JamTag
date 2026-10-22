@@ -2,11 +2,15 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import Divider from "@/src/components/Divider";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
+import TagFilterHelpModal, {
+  HIDE_FILTER_HELP_KEY,
+} from "@/src/components/TagFilterHelpModal";
 import { getAllTags, getSongsFromTags } from "@/src/db/db";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { SongTag } from "@/src/services/music/types";
 import { useFocusEffect } from "expo-router";
-import { ChevronRight, Search } from "lucide-react-native";
+import Storage from "expo-sqlite/kv-store";
+import { Info, Search } from "lucide-react-native";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
@@ -18,7 +22,10 @@ import {
 } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
 
+let hasShownFilterHelpThisSession = false;
+
 export default function CreateScreen() {
+  const [filterHelpVisible, setFilterHelpVisible] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
   const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
   const [anyOfTags, setAnyOfTags] = useState<SongTag[]>([]);
@@ -31,7 +38,52 @@ export default function CreateScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setAllTags(getAllTags());
+      let active = true;
+
+      async function showFilterHelpIfNeeded() {
+        if (hasShownFilterHelpThisSession) return;
+
+        let hidden = false;
+        try {
+          hidden = (await Storage.getItem(HIDE_FILTER_HELP_KEY)) === "true";
+        } catch (error) {
+          console.warn("Couldn't read the filter help preference.", error);
+        }
+
+        if (active && !hidden && !hasShownFilterHelpThisSession) {
+          hasShownFilterHelpThisSession = true;
+          setFilterHelpVisible(true);
+        }
+      }
+
+      void showFilterHelpIfNeeded();
+
+      return () => {
+        active = false;
+        setFilterHelpVisible(false);
+      };
+    }, []),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      const latestTags = getAllTags();
+
+      const tagsById = new Map(latestTags.map((tag) => [tag.id, tag]));
+
+      function reconcileTags(previous: SongTag[]): SongTag[] {
+        return previous.flatMap((oldTag) => {
+          const currentTag = tagsById.get(oldTag.id);
+
+          return currentTag ? [currentTag] : [];
+        });
+      }
+
+      setAllTags(latestTags);
+
+      setSelectedTags(reconcileTags);
+      setAnyOfTags(reconcileTags);
+      setExcludedTags(reconcileTags);
     }, []),
   );
 
@@ -126,6 +178,17 @@ export default function CreateScreen() {
           placeholder="Search Tags"
           placeholderTextColor="#8D8D8D"
         />
+        <TouchableOpacity
+          style={styles.filterHelpButton}
+          accessibilityRole="button"
+          accessibilityLabel="Explain All Of, Any Of, and None Of filters"
+          onPress={() => {
+            hasShownFilterHelpThisSession = true;
+            setFilterHelpVisible(true);
+          }}
+        >
+          <Info size={20} color="#ECEDEE" />
+        </TouchableOpacity>
       </View>
       <TagRow
         title="All Of"
@@ -206,8 +269,7 @@ export default function CreateScreen() {
           ))
         )}
       </ScrollView>
-      {/* Spacer bar */}
-      <Divider />
+      {/*hide artists section for now <Divider />
       <View style={styles.artistContainer}>
         <ThemedText type="bigText">Artists</ThemedText>
         <View
@@ -221,8 +283,7 @@ export default function CreateScreen() {
           <ThemedText>All Artists Selected</ThemedText>
           <ChevronRight color="white" />
         </View>
-      </View>
-      {/* Spacer bar */}
+      </View>*/}
       <Divider />
       <View
         style={{
@@ -264,17 +325,24 @@ export default function CreateScreen() {
           {isExporting ? "Preparing Jam…" : "Listen"}
         </ThemedText>
       </TouchableOpacity>
+      <TagFilterHelpModal
+        visible={filterHelpVisible}
+        onClose={() => setFilterHelpVisible(false)}
+      />
     </>
   );
 }
 
 const styles = StyleSheet.create({
+  filterHelpButton: {
+    paddingHorizontal: 8,
+  },
   searchBar: {
     backgroundColor: "#272727",
     width: "auto",
     height: 50,
     margin: 10,
-    marginBottom: 20,
+    marginTop: 5,
     padding: 3,
     borderRadius: 5,
     borderColor: "#535353",
@@ -345,7 +413,6 @@ const styles = StyleSheet.create({
   },
   tagRowScrollContent: {
     alignItems: "center",
-    flexGrow: 1,
     gap: 8,
     paddingHorizontal: 10,
   },
@@ -362,7 +429,6 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingHorizontal: 10,
     alignItems: "center",
-    flex: 1,
   },
   artistContainer: {
     display: "flex",
