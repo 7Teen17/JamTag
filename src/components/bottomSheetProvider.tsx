@@ -1,10 +1,10 @@
-import Divider from "./Divider";
 import {
   BottomSheetBackdrop,
   BottomSheetBackdropProps,
   BottomSheetFooter,
   BottomSheetFooterProps,
   BottomSheetModal,
+  BottomSheetScrollView,
   BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
@@ -21,8 +21,9 @@ import {
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createTag, getAllTags, setTag } from "../db/db";
-import { DEFAULT_TRACK, MusicTrack } from "../services/music/types";
 import { useSongTags } from "../hooks/useSongTags";
+import { DEFAULT_TRACK, MusicTrack } from "../services/music/types";
+import Divider from "./Divider";
 import HorizontalSongItem from "./HorizontalSongItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
@@ -46,7 +47,7 @@ export function useBottomSheet() {
 
 export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const snapPoints = useMemo(() => ["50%", "80%"], []);
+  const snapPoints = useMemo(() => ["60%", "90%"], []);
   const [track, setTrack] = useState<MusicTrack>(DEFAULT_TRACK);
   const [tagSearch, setTagSearch] = useState("");
 
@@ -139,7 +140,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           </View>
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
-            <View style={styles.tagContainer}>
+            <BottomSheetScrollView style={styles.tagContainer}>
               {suggestions.map((tag) => (
                 <Tag
                   key={tag.id}
@@ -165,7 +166,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   }}
                 />
               )}
-            </View>
+            </BottomSheetScrollView>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
@@ -186,7 +187,7 @@ function Footer({ animatedFooterPosition, onSave }: FooterProps) {
       animatedFooterPosition={animatedFooterPosition}
     >
       <TouchableOpacity style={styles.saveButton} onPress={onSave}>
-        <ThemedText type="title">Save Tags</ThemedText>
+        <ThemedText type="title">Done</ThemedText>
       </TouchableOpacity>
     </BottomSheetFooter>
   );
