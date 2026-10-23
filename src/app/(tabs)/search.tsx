@@ -9,6 +9,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
+  Pressable,
   StyleSheet,
   TextInput,
   View,
@@ -21,6 +22,7 @@ export default function SearchScreen() {
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const searchInputRef = useRef<TextInput>(null);
   const nextOffset = useRef<number | null>(null);
   const generation = useRef(0);
   const pending = useRef(false);
@@ -80,9 +82,14 @@ export default function SearchScreen() {
       </ThemedText>
       <Divider />
       <View style={styles.container}>
-        <View style={styles.searchBar}>
-          <Search style={styles.searchIcon} />
+        <Pressable
+          style={styles.searchBar}
+          accessible={false}
+          onPress={() => searchInputRef.current?.focus()}
+        >
+          <Search style={styles.searchIcon} pointerEvents="none" />
           <TextInput
+            ref={searchInputRef}
             style={styles.searchText}
             placeholder="Search Songs, Artists, Albums"
             placeholderTextColor="#8D8D8D"
@@ -100,7 +107,7 @@ export default function SearchScreen() {
             autoCorrect={false}
             returnKeyType="search"
           />
-        </View>
+        </Pressable>
         <FlatList
           key={query}
           data={tracks}
@@ -174,6 +181,7 @@ const styles = StyleSheet.create({
   },
   searchText: {
     flex: 1,
+    alignSelf: "stretch",
     fontFamily: "UrbanistRegular",
     fontSize: 14,
     color: "white",

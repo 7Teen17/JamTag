@@ -15,6 +15,7 @@ import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Linking,
+  Pressable,
   StyleSheet,
   TextInput,
   TouchableOpacity,
@@ -27,6 +28,7 @@ let hasShownFilterHelpThisSession = false;
 export default function CreateScreen() {
   const [filterHelpVisible, setFilterHelpVisible] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
+  const searchInputRef = useRef<TextInput>(null);
   const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
   const [anyOfTags, setAnyOfTags] = useState<SongTag[]>([]);
   const [excludedTags, setExcludedTags] = useState<SongTag[]>([]);
@@ -167,10 +169,16 @@ export default function CreateScreen() {
         • Create
       </ThemedText>
       <Divider />
-      <View style={styles.searchBar}>
-        <Search color="white" style={styles.searchIcon} />
+      <Pressable
+        style={styles.searchBar}
+        accessible={false}
+        onPress={() => searchInputRef.current?.focus()}
+      >
+        <Search color="white" style={styles.searchIcon} pointerEvents="none" />
         <TextInput
+          ref={searchInputRef}
           style={styles.searchText}
+          accessibilityLabel="Search tags"
           value={tagSearch}
           onChangeText={(search) => {
             setTagSearch(search);
@@ -189,7 +197,7 @@ export default function CreateScreen() {
         >
           <Info size={20} color="#ECEDEE" />
         </TouchableOpacity>
-      </View>
+      </Pressable>
       <TagRow
         title="All Of"
         tags={selectedTags}
@@ -357,6 +365,7 @@ const styles = StyleSheet.create({
   },
   searchText: {
     flex: 1,
+    alignSelf: "stretch",
     fontFamily: "UrbanistRegular",
     fontSize: 14,
     color: "#8D8D8D",
