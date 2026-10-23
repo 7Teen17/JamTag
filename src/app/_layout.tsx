@@ -60,7 +60,7 @@ export default function RootLayout() {
   useEffect(() => {
     setupDB();
     setDatabaseReady(true);
-  });
+  }, []);
 
   useEffect(() => {
     if (loaded && databaseReady) {
