@@ -10,6 +10,7 @@ type TagProps = {
   removeable?: boolean;
   addable?: boolean;
   editable?: boolean;
+  truncate?: boolean;
   onPress?: () => void;
 };
 
@@ -20,6 +21,7 @@ export default function Tag({
   removeable,
   addable,
   editable,
+  truncate = false,
   onPress,
 }: TagProps) {
   const isLarge = type ? type === "large" : false;
@@ -35,6 +37,7 @@ export default function Tag({
     <Pressable
       style={[
         styles.container,
+        truncate && styles.truncatedContainer,
         { backgroundColor: color },
         isExplicit && styles.explicitContainer,
         addable && styles.addableContainer,
@@ -44,9 +47,12 @@ export default function Tag({
         },
       ]}
       onPress={onPress}
+      accessibilityLabel={truncate ? value : undefined}
     >
       <ThemedText
         type="tag"
+        numberOfLines={truncate ? 1 : undefined}
+        ellipsizeMode="tail"
         style={[
           isLarge
             ? styles.largeText
@@ -54,6 +60,7 @@ export default function Tag({
               ? styles.explicitText
               : styles.text,
           { color: foreground },
+          truncate && styles.truncatedText,
         ]}
       >
         {value}
@@ -70,6 +77,14 @@ export default function Tag({
 }
 
 const styles = StyleSheet.create({
+  truncatedContainer: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
+  truncatedText: {
+    flexShrink: 1,
+    minWidth: 0,
+  },
   container: {
     borderRadius: 5,
     alignItems: "center",

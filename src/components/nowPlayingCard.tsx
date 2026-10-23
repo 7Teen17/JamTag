@@ -112,7 +112,7 @@ export default function NowPlayingCard() {
             onLayout={(event) => setTagRowWidth(event.nativeEvent.layout.width)}
           >
             {tags.slice(0, visibleTagCount).map((tag) => (
-              <Tag key={tag.id} value={tag.name} color={tag.color} />
+              <Tag key={tag.id} value={tag.name} color={tag.color} truncate />
             ))}
             {tagRowWidth > 0 && visibleTagCount < tags.length && (
               <ThemedText

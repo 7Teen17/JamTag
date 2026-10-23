@@ -25,6 +25,7 @@ export default function LibraryTagSection({
           onPress={tagOnPress}
           type="large"
           editable
+          truncate
         />
       </View>
       {songs.length === 0 ? (
