@@ -2,6 +2,7 @@ import { useBottomSheet } from "@/src/components/bottomSheetProvider";
 import { ThemedText } from "@/src/components/default/themed-text";
 import Divider from "@/src/components/Divider";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
+import SearchBar from "@/src/components/SearchBar";
 import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { MusicTrack } from "@/src/services/music/types";
 import { Search } from "lucide-react-native";
@@ -9,9 +10,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   StyleSheet,
-  TextInput,
   View,
 } from "react-native";
 
@@ -22,7 +21,6 @@ export default function SearchScreen() {
   const [tracks, setTracks] = useState<MusicTrack[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const searchInputRef = useRef<TextInput>(null);
   const nextOffset = useRef<number | null>(null);
   const generation = useRef(0);
   const pending = useRef(false);
@@ -82,32 +80,22 @@ export default function SearchScreen() {
       </ThemedText>
       <Divider />
       <View style={styles.container}>
-        <Pressable
-          style={styles.searchBar}
-          accessible={false}
-          onPress={() => searchInputRef.current?.focus()}
-        >
-          <Search style={styles.searchIcon} pointerEvents="none" />
-          <TextInput
-            ref={searchInputRef}
-            style={styles.searchText}
-            placeholder="Search Songs, Artists, Albums"
-            placeholderTextColor="#8D8D8D"
-            accessibilityLabel="Search songs"
-            value={query}
-            onChangeText={(text) => {
-              if (text === query) return;
-              generation.current++;
-              nextOffset.current = null;
-              setTracks([]);
-              setError(null);
-              setLoading(Boolean(musicService && text.trim()));
-              setQuery(text);
-            }}
-            autoCorrect={false}
-            returnKeyType="search"
-          />
-        </Pressable>
+        <SearchBar
+          placeholder="Search Songs, Artists, Albums"
+          accessibilityLabel="Search songs"
+          value={query}
+          onChangeText={(text) => {
+            if (text === query) return;
+            generation.current++;
+            nextOffset.current = null;
+            setTracks([]);
+            setError(null);
+            setLoading(Boolean(musicService && text.trim()));
+            setQuery(text);
+          }}
+          autoCorrect={false}
+          returnKeyType="search"
+        />
         <FlatList
           key={query}
           data={tracks}
@@ -160,31 +148,6 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  searchBar: {
-    backgroundColor: "#272727",
-    width: "auto",
-    height: 50,
-    margin: 10,
-    padding: 3,
-    borderRadius: 5,
-    borderColor: "#535353",
-    borderWidth: 1,
-    alignItems: "center",
-    display: "flex",
-    flexDirection: "row",
-  },
-  searchIcon: {
-    color: "white",
-    marginLeft: 5,
-    marginRight: 7,
-  },
-  searchText: {
-    flex: 1,
-    alignSelf: "stretch",
-    fontFamily: "UrbanistRegular",
-    fontSize: 14,
-    color: "white",
   },
   emptyListContent: {
     flexGrow: 1,

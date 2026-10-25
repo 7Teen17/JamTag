@@ -4,10 +4,8 @@ import {
   BottomSheetFooter,
   BottomSheetFooterProps,
   BottomSheetModal,
-  BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
-import { Search } from "lucide-react-native";
 import {
   createContext,
   useCallback,
@@ -15,10 +13,9 @@ import {
   useMemo,
   useRef,
   useState,
-  type ComponentRef,
   type PropsWithChildren,
 } from "react";
-import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createTag, getAllTags, setTag } from "../db/db";
 import { useSongTags } from "../hooks/useSongTags";
@@ -27,6 +24,7 @@ import Divider from "./Divider";
 import HorizontalSongItem from "./HorizontalSongItem";
 import { ThemedText } from "./default/themed-text";
 import Tag from "./tag";
+import SearchBar from "./SearchBar";
 
 type BottomSheetContextValue = {
   openSheet: (track: MusicTrack) => void;
@@ -47,8 +45,6 @@ export function useBottomSheet() {
 
 export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
-  const searchInputRef =
-    useRef<ComponentRef<typeof BottomSheetTextInput>>(null);
   const snapPoints = useMemo(() => ["60%", "90%"], []);
   const [track, setTrack] = useState<MusicTrack>(DEFAULT_TRACK);
   const [tagSearch, setTagSearch] = useState("");
@@ -128,24 +124,15 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           </View>
           <Divider />
           {/* Search bar */}
-          <Pressable
-            style={styles.searchBar}
-            accessible={false}
-            onPress={() => searchInputRef.current?.focus()}
-          >
-            <Search style={styles.searchIcon} pointerEvents="none" />
-            <BottomSheetTextInput
-              ref={searchInputRef}
-              style={styles.searchText}
-              accessibilityLabel="Search or create tags"
-              value={tagSearch}
-              onChangeText={(search) => {
-                setTagSearch(search);
-              }}
-              placeholder="Search or Create Tags"
-              placeholderTextColor="#8D8D8D"
-            />
-          </Pressable>
+          <SearchBar
+            bottomSheet
+            accessibilityLabel="Search or create tags"
+            value={tagSearch}
+            onChangeText={(search) => {
+              setTagSearch(search);
+            }}
+            placeholder="Search or Create Tags"
+          />
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
             <View style={styles.tagContainer}>
@@ -241,30 +228,5 @@ const styles = StyleSheet.create({
     fontFamily: "UrbanistBold",
     fontSize: 14,
     marginBottom: 5,
-  },
-  searchBar: {
-    backgroundColor: "#272727",
-    width: "auto",
-    height: 50,
-    margin: 10,
-    padding: 3,
-    borderRadius: 5,
-    borderColor: "#535353",
-    borderWidth: 1,
-    alignItems: "center",
-    display: "flex",
-    flexDirection: "row",
-  },
-  searchIcon: {
-    color: "white",
-    marginLeft: 5,
-    marginRight: 7,
-  },
-  searchText: {
-    flex: 1,
-    alignSelf: "stretch",
-    fontFamily: "UrbanistRegular",
-    fontSize: 14,
-    color: "#8D8D8D",
   },
 });

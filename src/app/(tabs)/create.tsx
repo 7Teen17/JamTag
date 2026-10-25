@@ -2,6 +2,7 @@ import { ThemedText } from "@/src/components/default/themed-text";
 import Divider from "@/src/components/Divider";
 import HorizontalSongItem from "@/src/components/HorizontalSongItem";
 import Tag from "@/src/components/tag";
+import SearchBar from "@/src/components/SearchBar";
 import TagFilterHelpModal, {
   HIDE_FILTER_HELP_KEY,
 } from "@/src/components/TagFilterHelpModal";
@@ -10,14 +11,12 @@ import { useSpotifyAuth } from "@/src/hooks/auth/useSpotifyAuth";
 import type { SongTag } from "@/src/services/music/types";
 import { useFocusEffect } from "expo-router";
 import Storage from "expo-sqlite/kv-store";
-import { Info, Search } from "lucide-react-native";
+import { Info } from "lucide-react-native";
 import { useCallback, useRef, useState } from "react";
 import {
   Alert,
   Linking,
-  Pressable,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -28,7 +27,6 @@ let hasShownFilterHelpThisSession = false;
 export default function CreateScreen() {
   const [filterHelpVisible, setFilterHelpVisible] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
-  const searchInputRef = useRef<TextInput>(null);
   const [selectedTags, setSelectedTags] = useState<SongTag[]>([]);
   const [anyOfTags, setAnyOfTags] = useState<SongTag[]>([]);
   const [excludedTags, setExcludedTags] = useState<SongTag[]>([]);
@@ -169,35 +167,25 @@ export default function CreateScreen() {
         • Create
       </ThemedText>
       <Divider />
-      <Pressable
-        style={styles.searchBar}
-        accessible={false}
-        onPress={() => searchInputRef.current?.focus()}
+      <SearchBar
+        accessibilityLabel="Search tags"
+        value={tagSearch}
+        onChangeText={(search) => {
+          setTagSearch(search);
+        }}
+        placeholder="Search Tags"
+      />
+      <TouchableOpacity
+        style={styles.filterHelpButton}
+        accessibilityRole="button"
+        accessibilityLabel="Explain All Of, Any Of, and None Of filters"
+        onPress={() => {
+          hasShownFilterHelpThisSession = true;
+          setFilterHelpVisible(true);
+        }}
       >
-        <Search color="white" style={styles.searchIcon} pointerEvents="none" />
-        <TextInput
-          ref={searchInputRef}
-          style={styles.searchText}
-          accessibilityLabel="Search tags"
-          value={tagSearch}
-          onChangeText={(search) => {
-            setTagSearch(search);
-          }}
-          placeholder="Search Tags"
-          placeholderTextColor="#8D8D8D"
-        />
-        <TouchableOpacity
-          style={styles.filterHelpButton}
-          accessibilityRole="button"
-          accessibilityLabel="Explain All Of, Any Of, and None Of filters"
-          onPress={() => {
-            hasShownFilterHelpThisSession = true;
-            setFilterHelpVisible(true);
-          }}
-        >
-          <Info size={20} color="#ECEDEE" />
-        </TouchableOpacity>
-      </Pressable>
+        <Info size={20} color="#ECEDEE" />
+      </TouchableOpacity>
       <TagRow
         title="All Of"
         tags={selectedTags}
@@ -344,31 +332,6 @@ export default function CreateScreen() {
 const styles = StyleSheet.create({
   filterHelpButton: {
     paddingHorizontal: 8,
-  },
-  searchBar: {
-    backgroundColor: "#272727",
-    width: "auto",
-    height: 50,
-    margin: 10,
-    marginTop: 5,
-    padding: 3,
-    borderRadius: 5,
-    borderColor: "#535353",
-    borderWidth: 1,
-    alignItems: "center",
-    display: "flex",
-    flexDirection: "row",
-  },
-  searchIcon: {
-    marginLeft: 5,
-    marginRight: 7,
-  },
-  searchText: {
-    flex: 1,
-    alignSelf: "stretch",
-    fontFamily: "UrbanistRegular",
-    fontSize: 14,
-    color: "#8D8D8D",
   },
   sectionNameText: {
     marginLeft: 10,
