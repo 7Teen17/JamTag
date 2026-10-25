@@ -125,16 +125,20 @@ export default function NowPlayingCard() {
             )}
           </View>
           <TouchableOpacity
-            style={styles.tagButton}
+            style={[styles.tagButton, !playback && styles.tagButtonDisabled]}
             onPress={(event) => {
               if (playback) {
                 openSheet(playback.track);
               }
             }}
             activeOpacity={0.5}
+            disabled={!playback}
+            accessibilityState={{ disabled: !playback }}
           >
             <View style={styles.tagButtonContent}>
-              <Text style={styles.tagButtonText}>Tag This Song</Text>
+              <Text style={styles.tagButtonText}>
+                {playback ? "Tag This Song" : "No Song Playing"}
+              </Text>
             </View>
           </TouchableOpacity>
         </View>
@@ -200,11 +204,15 @@ const styles = StyleSheet.create({
     gap: 5,
   },
   tagButton: {
-    flex: 1,
+    height: 36,
+    flexShrink: 0,
     backgroundColor: "#3FA46B",
     alignSelf: "stretch",
     borderRadius: 15,
-    marginTop: 10,
+    marginTop: "auto",
+  },
+  tagButtonDisabled: {
+    opacity: 0.5,
   },
   tagButtonContent: {
     flex: 1,
