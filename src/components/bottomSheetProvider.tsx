@@ -4,21 +4,21 @@ import {
   BottomSheetFooter,
   BottomSheetFooterProps,
   BottomSheetModal,
-  BottomSheetScrollView,
   BottomSheetTextInput,
   BottomSheetView,
 } from "@gorhom/bottom-sheet";
 import { Search } from "lucide-react-native";
 import {
   createContext,
-  type PropsWithChildren,
   useCallback,
   useContext,
   useMemo,
   useRef,
   useState,
+  type ComponentRef,
+  type PropsWithChildren,
 } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createTag, getAllTags, setTag } from "../db/db";
 import { useSongTags } from "../hooks/useSongTags";
@@ -47,6 +47,8 @@ export function useBottomSheet() {
 
 export default function BottomSheetProvider({ children }: PropsWithChildren) {
   const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const searchInputRef =
+    useRef<ComponentRef<typeof BottomSheetTextInput>>(null);
   const snapPoints = useMemo(() => ["60%", "90%"], []);
   const [track, setTrack] = useState<MusicTrack>(DEFAULT_TRACK);
   const [tagSearch, setTagSearch] = useState("");
@@ -126,10 +128,16 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
           </View>
           <Divider />
           {/* Search bar */}
-          <View style={styles.searchBar}>
-            <Search style={styles.searchIcon}></Search>
+          <Pressable
+            style={styles.searchBar}
+            accessible={false}
+            onPress={() => searchInputRef.current?.focus()}
+          >
+            <Search style={styles.searchIcon} pointerEvents="none" />
             <BottomSheetTextInput
+              ref={searchInputRef}
               style={styles.searchText}
+              accessibilityLabel="Search or create tags"
               value={tagSearch}
               onChangeText={(search) => {
                 setTagSearch(search);
@@ -137,10 +145,10 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
               placeholder="Search or Create Tags"
               placeholderTextColor="#8D8D8D"
             />
-          </View>
+          </Pressable>
           <View style={{ margin: 5 }}>
             <ThemedText style={styles.tagsText}>SUGGESTIONS</ThemedText>
-            <BottomSheetScrollView style={styles.tagContainer}>
+            <View style={styles.tagContainer}>
               {suggestions.map((tag) => (
                 <Tag
                   key={tag.id}
@@ -166,7 +174,7 @@ export default function BottomSheetProvider({ children }: PropsWithChildren) {
                   }}
                 />
               )}
-            </BottomSheetScrollView>
+            </View>
           </View>
         </BottomSheetView>
       </BottomSheetModal>
@@ -254,6 +262,7 @@ const styles = StyleSheet.create({
   },
   searchText: {
     flex: 1,
+    alignSelf: "stretch",
     fontFamily: "UrbanistRegular",
     fontSize: 14,
     color: "#8D8D8D",
