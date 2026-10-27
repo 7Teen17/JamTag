@@ -58,9 +58,15 @@ export default function TagFilterHelpModal({
               Build your mix
             </Text>
             {[
-              ["All Of", "Songs must have every tag you select."],
-              ["Any Of", "Songs must have at least one of these tags."],
-              ["None Of", "Excludes songs with any of these tags."],
+              [
+                "Include",
+                "Your Jam will include songs from all of these tags.",
+              ],
+              [
+                "Required",
+                "All songs in your Jam must have all of these tags.",
+              ],
+              ["Exclude", "No songs in your Jam will have any of these tags."],
             ].map(([label, description]) => (
               <View key={label}>
                 <Text style={styles.helpLabel}>{label}</Text>

@@ -178,7 +178,7 @@ export default function CreateScreen() {
       <TouchableOpacity
         style={styles.filterHelpButton}
         accessibilityRole="button"
-        accessibilityLabel="Explain All Of, Any Of, and None Of filters"
+        accessibilityLabel="Explain Include, Required, and Exclude filters"
         onPress={() => {
           hasShownFilterHelpThisSession = true;
           setFilterHelpVisible(true);
@@ -187,19 +187,19 @@ export default function CreateScreen() {
         <Info size={20} color="#ECEDEE" />
       </TouchableOpacity>
       <TagRow
-        title="All Of"
-        tags={selectedTags}
-        emptyText="No Tags Selected"
-        onTagPress={toggleSelectedTag}
-      />
-      <TagRow
-        title="Any Of"
+        title="Include"
         tags={anyOfTags}
         emptyText="No Tags Selected"
         onTagPress={toggleAnyOfTag}
       />
       <TagRow
-        title="None Of"
+        title="Required"
+        tags={selectedTags}
+        emptyText="No Tags Selected"
+        onTagPress={toggleSelectedTag}
+      />
+      <TagRow
+        title="Exclude"
         tags={excludedTags}
         emptyText="No Tags Excluded"
         onTagPress={toggleExcludedTag}
@@ -216,9 +216,9 @@ export default function CreateScreen() {
           <View style={styles.tagModeToggle}>
             {(
               [
-                { mode: "all", label: "All Of" },
-                { mode: "any", label: "Any Of" },
-                { mode: "none", label: "None Of" },
+                { mode: "any", label: "Include" },
+                { mode: "all", label: "Required" },
+                { mode: "none", label: "Exclude" },
               ] as const
             ).map(({ mode, label }) => (
               <TouchableOpacity
